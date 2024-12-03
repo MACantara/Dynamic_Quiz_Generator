@@ -395,7 +395,6 @@ $(document).ready(function() {
             
             // Check if the drop zone is already occupied
             if ($(this).find('.dropped-item').length > 0) {
-                // Optionally, you could swap items or prevent dropping
                 return;
             }
             
@@ -406,6 +405,9 @@ $(document).ready(function() {
                 .attr('draggable', 'false')  // Prevent re-dragging
                 .css('opacity', '1')
                 .css('display', 'flex');
+            
+            // Remove any existing remove button from the clone
+            droppedItemClone.find('.remove-item').remove();
             
             // Add remove button to the clone
             const removeButton = $('<button>')
