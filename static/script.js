@@ -213,11 +213,6 @@ $(document).ready(function() {
                     // Create a drag and drop style coding question
                     const codingQuestionContainer = $('<div>').addClass('coding-question-container');
                     
-                    // Add question description
-                    const codingQuestionDescription = $('<div>')
-                        .addClass('mb-3 text-muted')
-                        .text(question.question);
-                    
                     // Create a container for the entire coding challenge
                     const codingChallengeContainer = $('<div>').addClass('row');
                     
@@ -288,7 +283,6 @@ $(document).ready(function() {
                     codingChallengeContainer.append(codingLeftCol, codingRightCol);
                     
                     // Add everything to the question body
-                    questionBody.append(codingQuestionDescription);
                     questionBody.append(codingChallengeContainer);
                     break;
 
