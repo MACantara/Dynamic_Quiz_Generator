@@ -86,10 +86,8 @@ $(document).ready(function() {
             const questionDiv = $('<div>').addClass('card mb-3');
             const questionBody = $('<div>').addClass('card-body');
             
-            // Add question text only once
-            if (question.type === 'drag_drop') {
-                questionBody.append($('<p>').addClass('card-text').text(question.question));
-            }
+            // Add question text for all question types
+            questionBody.append($('<p>').addClass('card-text').text(question.question));
 
             switch (question.type) {
                 case 'multiple_choice':
