@@ -397,9 +397,12 @@ $(document).ready(function() {
             if ($(this).find('.dropped-item').length > 0) {
                 return;
             }
+
+            // Ensure the original item is hidden before cloning
+            draggedItem.css('display', 'none');
             
             // Create a clone for the drop zone
-            const droppedItemClone = draggedItem.clone()
+            const droppedItemClone = draggedItem.clone(true, true)
                 .removeClass('dragging')
                 .addClass('dropped-item')
                 .attr('draggable', 'false')  // Prevent re-dragging
