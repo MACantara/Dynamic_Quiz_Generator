@@ -477,7 +477,16 @@ $(document).ready(function() {
                     answer = $(`select[name="q${index}"]`).val();
                     break;
                 case 'coding':
-                    answer = $(`textarea[name="q${index}"]`).val();
+                    // Collect answers from drop zones for coding questions
+                    answer = [];
+                    $(`.code-drop-zone-wrapper .inline-drop-zone[data-question="${index}"]`).each(function() {
+                        const droppedItem = $(this).find('.drag-item');
+                        if (droppedItem.length) {
+                            answer.push(droppedItem.attr('data-value'));
+                        } else {
+                            answer.push(null); // If no item is dropped
+                        }
+                    });
                     break;
             }
             answers.push({
