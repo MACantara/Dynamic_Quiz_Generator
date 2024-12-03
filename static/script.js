@@ -495,8 +495,9 @@ $(document).ready(function() {
                 case 'fill_blank':
                     const fillBlankAnswer = $(`select[name="q${index}"]`).val();
                     answers.push({
+                        question: question.question,
                         questionType: 'fill_blank',
-                        userAnswer: fillBlankAnswer,
+                        userAnswer: fillBlankAnswer || 'Not answered',
                         correctAnswer: question.correct_answer,
                         isCorrect: compareAnswers(fillBlankAnswer, question.correct_answer)
                     });
@@ -541,10 +542,14 @@ $(document).ready(function() {
         `;
 
         answers.forEach((answer, index) => {
+            const questionText = answer.questionType === 'fill_blank' 
+                ? answer.question.replace('_____', `<u>${answer.userAnswer}</u>`)
+                : answer.question;
+                
             resultsHtml += `
                 <div class="mb-3">
-                    <p><strong>Question ${index + 1}:</strong> ${answer.question}</p>
-                    <p><strong>Your Answer:</strong> ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer || 'Not answered'}</p>
+                    <p><strong>Question ${index + 1}:</strong> ${questionText}</p>
+                    <p><strong>Your Answer:</strong> ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}</p>
                     <p><strong>Correct Answer:</strong> ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}</p>
                     <p class="text-${answer.isCorrect ? 'success' : 'danger'}">
                         <i class="fas fa-${answer.isCorrect ? 'check' : 'times'}"></i>
