@@ -86,13 +86,8 @@ $(document).ready(function() {
             const questionDiv = $('<div>').addClass('card mb-3');
             const questionBody = $('<div>').addClass('card-body');
             
-            questionBody.append($('<h5>').addClass('card-title').text(`Question ${index + 1}`));
-
-            // For coding questions, format the code with proper line breaks
-            if (question.type === 'coding') {
-                const formattedQuestion = question.question.replace(/\\n/g, '\n');
-                questionBody.append($('<pre>').addClass('card-text').text(formattedQuestion));
-            } else {
+            // Add question text only once
+            if (question.type === 'drag_drop') {
                 questionBody.append($('<p>').addClass('card-text').text(question.question));
             }
 
@@ -116,9 +111,6 @@ $(document).ready(function() {
                 case 'drag_drop':
                     const dragZone = $('<div>').addClass('drag-zone mb-2');
                     const dropZone = $('<div>').addClass('drop-zone').attr('data-question', index);
-                    
-                    // Add question context
-                    questionBody.append($('<div>').addClass('mb-3').text(question.question));
                     
                     // Create two-column layout for matching
                     const matchingContainer = $('<div>').addClass('row');
