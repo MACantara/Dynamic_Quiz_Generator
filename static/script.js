@@ -86,8 +86,10 @@ $(document).ready(function() {
             const questionDiv = $('<div>').addClass('card mb-3');
             const questionBody = $('<div>').addClass('card-body');
             
-            // Add question text for all question types
-            questionBody.append($('<p>').addClass('card-text').text(question.question));
+            // Add question text for all question types except fill-in-the-blank
+            if (question.type !== 'fill_blank') {
+                questionBody.append($('<p>').addClass('card-text').text(question.question));
+            }
 
             switch (question.type) {
                 case 'multiple_choice':
@@ -191,7 +193,7 @@ $(document).ready(function() {
                     const questionText = question.question.replace('_____', 
                         '<input type="text" class="form-control d-inline fill-blank-input" ' +
                         'style="width: 150px; margin: 0 5px;" name="q' + index + '">');
-                    fillBlankInput.html(questionText);
+                    fillBlankInput.html('<p class="card-text">' + questionText + '</p>');
                     questionBody.append(fillBlankInput);
                     break;
 
