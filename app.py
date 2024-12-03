@@ -53,12 +53,12 @@ def generate_quiz(topic, num_questions, question_types):
     Example for ordering:
     {{"type": "drag_drop", "question": "Arrange the following steps of the TCP three-way handshake in the correct order:", "options": ["ACK", "SYN", "SYN-ACK"], "descriptions": ["Step 1", "Step 2", "Step 3"], "correct_answer": ["SYN", "SYN-ACK", "ACK"]}}
 
-    3. For dropdown questions:
-    - Format like IT certification exams
-    - Use "Select the [best/most appropriate/correct] [term/option/answer] that..." format
-    - Provide clear context and specific scenarios
+    3. For fill-in-the-blank questions:
+    - Format like certification exam questions
+    - Use clear, specific contexts with a single blank to fill
+    - Ensure the answer is unambiguous and specific
     Example:
-    {{"type": "dropdown", "question": "Select the most appropriate protocol to secure remote access to a network device's command-line interface:", "options": ["SSH", "HTTP", "FTP", "SMTP"], "correct_answer": "SSH"}}
+    {{"type": "fill_blank", "question": "In Python, the _____ function is used to convert a string to an integer.", "correct_answer": "int"}}
 
     Return a valid JSON object with this exact structure (no markdown, no code blocks):
     {{"questions": [
@@ -98,7 +98,7 @@ def generate():
     data = request.get_json()
     topic = data.get('topic')
     num_questions = int(data.get('num_questions', 5))
-    question_types = data.get('question_types', ['multiple_choice', 'drag_drop', 'dropdown', 'true_false', 'coding'])
+    question_types = data.get('question_types', ['multiple_choice', 'drag_drop', 'fill_blank', 'true_false', 'coding'])
     
     quiz = generate_quiz(topic, num_questions, question_types)
     return jsonify({'quiz': quiz})

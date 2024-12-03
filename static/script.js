@@ -185,13 +185,14 @@ $(document).ready(function() {
                     questionBody.append(matchingContainer);
                     break;
 
-                case 'dropdown':
-                    const select = $('<select>').addClass('form-select').attr('name', `q${index}`);
-                    select.append($('<option>').val('').text('-- Select your answer --'));
-                    question.options.forEach(option => {
-                        select.append($('<option>').val(option).text(option));
-                    });
-                    questionBody.append(select);
+                case 'fill_blank':
+                    // Create input field for fill-in-the-blank
+                    const fillBlankInput = $('<div>').addClass('fill-blank-container');
+                    const questionText = question.question.replace('_____', 
+                        '<input type="text" class="form-control d-inline fill-blank-input" ' +
+                        'style="width: 150px; margin: 0 5px;" name="q' + index + '">');
+                    fillBlankInput.html(questionText);
+                    questionBody.append(fillBlankInput);
                     break;
 
                 case 'true_false':
@@ -473,6 +474,16 @@ $(document).ready(function() {
                         });
                     }
                     break;
+                case 'fill_blank':
+                    const fillBlankAnswer = $(`input[name="q${index}"]`).val();
+                    answers.push({
+                        questionType: 'fill_blank',
+                        userAnswer: fillBlankAnswer,
+                        correctAnswer: question.correct_answer,
+                        isCorrect: compareAnswers(fillBlankAnswer.trim().toLowerCase(), 
+                                               question.correct_answer.toLowerCase())
+                    });
+                    break;
                 case 'dropdown':
                     answer = $(`select[name="q${index}"]`).val();
                     break;
@@ -489,12 +500,14 @@ $(document).ready(function() {
                     });
                     break;
             }
-            answers.push({
-                question: question.question,
-                userAnswer: answer || [],
-                correctAnswer: question.correct_answer,
-                isCorrect: compareAnswers(answer, question.correct_answer)
-            });
+            if (question.type !== 'fill_blank') {
+                answers.push({
+                    question: question.question,
+                    userAnswer: answer || [],
+                    correctAnswer: question.correct_answer,
+                    isCorrect: compareAnswers(answer, question.correct_answer)
+                });
+            }
         });
 
         displayResults(answers);
