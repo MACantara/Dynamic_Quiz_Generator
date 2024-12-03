@@ -188,11 +188,27 @@ $(document).ready(function() {
                     break;
 
                 case 'fill_blank':
-                    // Create input field for fill-in-the-blank
+                    // Create dropdown for fill-in-the-blank
                     const fillBlankInput = $('<div>').addClass('fill-blank-container');
-                    const questionText = question.question.replace('_____', 
-                        '<input type="text" class="form-control d-inline fill-blank-input" ' +
-                        'style="width: 150px; margin: 0 5px;" name="q' + index + '">');
+                    
+                    // Create select element with options
+                    const select = $('<select>')
+                        .addClass('form-select d-inline-block')
+                        .css('width', 'auto')
+                        .css('min-width', '150px')
+                        .css('margin', '0 5px')
+                        .attr('name', `q${index}`);
+                    
+                    // Add default option
+                    select.append($('<option>').val('').text('Select answer'));
+                    
+                    // Add question options
+                    question.options.forEach(option => {
+                        select.append($('<option>').val(option).text(option));
+                    });
+                    
+                    // Replace blank with select element
+                    const questionText = question.question.replace('_____', select.prop('outerHTML'));
                     fillBlankInput.html('<p class="card-text">' + questionText + '</p>');
                     questionBody.append(fillBlankInput);
                     break;
@@ -477,13 +493,12 @@ $(document).ready(function() {
                     }
                     break;
                 case 'fill_blank':
-                    const fillBlankAnswer = $(`input[name="q${index}"]`).val();
+                    const fillBlankAnswer = $(`select[name="q${index}"]`).val();
                     answers.push({
                         questionType: 'fill_blank',
                         userAnswer: fillBlankAnswer,
                         correctAnswer: question.correct_answer,
-                        isCorrect: compareAnswers(fillBlankAnswer.trim().toLowerCase(), 
-                                               question.correct_answer.toLowerCase())
+                        isCorrect: compareAnswers(fillBlankAnswer, question.correct_answer)
                     });
                     break;
                 case 'dropdown':
