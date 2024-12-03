@@ -54,11 +54,17 @@ def generate_quiz(topic, num_questions, question_types):
     {{"type": "drag_drop", "question": "Arrange the following steps of the TCP three-way handshake in the correct order:", "options": ["ACK", "SYN", "SYN-ACK"], "descriptions": ["Step 1", "Step 2", "Step 3"], "correct_answer": ["SYN", "SYN-ACK", "ACK"]}}
 
     3. For fill-in-the-blank questions:
-    - Format like certification exam questions
-    - Use clear, specific contexts with a single blank to fill
-    - Ensure the answer is unambiguous and specific
+    - Format questions with a clear sentence where one term needs to be filled in
+    - Mark the blank spot with exactly five underscores (_____) where the dropdown will appear
+    - Include 4-5 plausible options that could fit grammatically in the blank
+    - The question should read naturally when any option is selected
+    - Do not repeat the question text or include any additional formatting
     Example:
-    {{"type": "fill_blank", "question": "In Python, the _____ function is used to convert a string to an integer.", "correct_answer": "int"}}
+    {{"type": "fill_blank", 
+      "question": "The _____ protocol is used to securely transfer files between a client and server.",
+      "options": ["SFTP", "HTTP", "SMTP", "ICMP"],
+      "correct_answer": "SFTP"
+    }}
 
     Return a valid JSON object with this exact structure (no markdown, no code blocks):
     {{"questions": [
