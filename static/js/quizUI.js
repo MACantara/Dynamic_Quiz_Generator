@@ -173,10 +173,10 @@ const QuizUI = {
     // Display true/false question
     displayTrueFalse: function(question, index, questionBody) {
         const tfOptions = $('<div>').addClass('options');
-        ['true', 'false'].forEach(option => {
+        ['True', 'False'].forEach(option => {
             tfOptions.append(`
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="q${index}" value="${option}">
+                    <input class="form-check-input" type="radio" name="q${index}" value="${option.toLowerCase()}">
                     <label class="form-check-label">${option}</label>
                 </div>
             `);
@@ -219,6 +219,8 @@ const QuizUI = {
 
     // Display quiz results
     displayResults: function(answers) {
+        // Clear any existing results
+        $('#quizContainer').addClass('d-none');
         const resultsContainer = $('#results');
         resultsContainer.empty();
         
@@ -250,7 +252,7 @@ const QuizUI = {
                 .html(`<strong>Your Score: ${score}%</strong> (${correctCount} out of ${answers.length} correct)`)
         );
         
-        $('#quizContainer').addClass('d-none');
+        // Show results container
         resultsContainer.removeClass('d-none');
     }
 };
