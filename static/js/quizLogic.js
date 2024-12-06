@@ -49,12 +49,15 @@ const QuizLogic = {
 
             const answers = [];
             this.currentQuiz.questions.forEach((question, index) => {
+                console.log(`Processing Question ${index + 1}:`, question);
+
                 let userAnswer;
                 let correctAnswer = question.correct_answer;
 
                 switch (question.type) {
                     case 'multiple_choice':
                     case 'fill_blank':
+                    case 'true_false':
                         userAnswer = $(`[name="q${index}"]:checked`).val() || $(`select[name="q${index}"]`).val();
                         break;
 
@@ -76,6 +79,11 @@ const QuizLogic = {
                         break;
                 }
 
+                console.log(`Question ${index + 1} Answers:`, {
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer
+                });
+
                 answers.push({
                     userAnswer: userAnswer,
                     correctAnswer: correctAnswer,
@@ -89,10 +97,40 @@ const QuizLogic = {
 
     // Compare user answers with correct answers
     compareAnswers: function(userAnswer, correctAnswer) {
-        if (Array.isArray(userAnswer) && Array.isArray(correctAnswer)) {
-            return JSON.stringify(userAnswer) === JSON.stringify(correctAnswer);
-        }
-        return userAnswer === correctAnswer;
+        console.log('Comparing Answers:', {
+            userAnswer: userAnswer, 
+            correctAnswer: correctAnswer,
+            userAnswerType: typeof userAnswer,
+            correctAnswerType: typeof correctAnswer
+        });
+
+        // Normalize true/false values
+        const normalizeBooleanValue = (value) => {
+            // Convert string to boolean if needed
+            if (typeof value === 'string') {
+                return value.toLowerCase().trim() === 'true';
+            }
+            // If already a boolean, return as is
+            if (typeof value === 'boolean') {
+                return value;
+            }
+            // For any other type, return false
+            return false;
+        };
+
+        // Normalize both answers
+        const normalizedUserAnswer = normalizeBooleanValue(userAnswer);
+        const normalizedCorrectAnswer = normalizeBooleanValue(correctAnswer);
+
+        // Compare normalized values
+        const result = normalizedUserAnswer === normalizedCorrectAnswer;
+        console.log('Normalized Comparison Result:', {
+            normalizedUserAnswer,
+            normalizedCorrectAnswer,
+            result
+        });
+
+        return result;
     },
 
     // Setup drag and drop functionality
