@@ -71,8 +71,8 @@ Dynamic_Quiz_Generator/
 
 ## Dependencies
 
-- Flask (3.0.0): Web framework
-- python-dotenv (1.0.0): Environment variable management
+- Flask (3.1.0): Web framework
+- python-dotenv (1.0.1): Environment variable management
 - google-generativeai (0.8.3): Google Gemini AI integration
 
 ## Getting a Gemini API Key
