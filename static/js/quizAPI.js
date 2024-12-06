@@ -1,13 +1,19 @@
 // quizAPI.js - Handles all API calls for quiz generation and submission
 
 const QuizAPI = {
-    generateQuiz: function(quizConfig) {
-        return $.ajax({
-            url: '/generate',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(quizConfig)
-        });
+    generateQuiz: async function(quizConfig) {
+        try {
+            const response = await $.ajax({
+                url: '/generate',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(quizConfig)
+            });
+            return response;
+        } catch (error) {
+            console.error('API Error:', error);
+            throw error;
+        }
     },
 
     parseQuizData: function(response) {

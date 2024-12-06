@@ -12,7 +12,7 @@ const QuizLogic = {
 
     // Setup form submission
     setupFormSubmission: function() {
-        $('#quizForm').on('submit', (e) => {
+        $('#quizForm').on('submit', async (e) => {
             e.preventDefault();
             
             const questionTypes = [];
@@ -28,24 +28,17 @@ const QuizLogic = {
 
             QuizUI.showLoading();
 
-            QuizAPI.generateQuiz(quizConfig)
-                .then(response => {
-                    try {
-                        this.currentQuiz = QuizAPI.parseQuizData(response);
-                        QuizUI.displayQuiz(this.currentQuiz);
-                        $('#quizContainer').removeClass('d-none');
-                    } catch (error) {
-                        console.error('Error:', error);
-                        alert('Error generating quiz. Please try again.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error generating quiz. Please try again.');
-                })
-                .finally(() => {
-                    QuizUI.hideLoading();
-                });
+            try {
+                const response = await QuizAPI.generateQuiz(quizConfig);
+                this.currentQuiz = QuizAPI.parseQuizData(response);
+                QuizUI.displayQuiz(this.currentQuiz);
+                $('#quizContainer').removeClass('d-none');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error generating quiz. Please try again.');
+            } finally {
+                QuizUI.hideLoading();
+            }
         });
     },
 
