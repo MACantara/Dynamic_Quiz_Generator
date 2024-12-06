@@ -221,8 +221,8 @@ const QuizUI = {
     displayResults: function(answers) {
         // Clear any existing results
         $('#quizContainer').addClass('d-none');
-        const resultsContainer = $('#results');
-        resultsContainer.empty();
+        const resultsContent = $('#resultsContent');
+        resultsContent.empty();
         
         let correctCount = 0;
         answers.forEach((answer, index) => {
@@ -242,17 +242,18 @@ const QuizUI = {
                     )
             );
             
-            resultsContainer.append(resultDiv);
+            resultsContent.append(resultDiv);
         });
         
         const score = Math.round((correctCount / answers.length) * 100);
-        resultsContainer.prepend(
+        resultsContent.prepend(
             $('<div>')
                 .addClass('alert alert-info')
                 .html(`<strong>Your Score: ${score}%</strong> (${correctCount} out of ${answers.length} correct)`)
         );
         
-        // Show results container
-        resultsContainer.removeClass('d-none');
+        // Show results modal
+        const resultsModal = new bootstrap.Modal('#resultsModal');
+        resultsModal.show();
     }
 };
