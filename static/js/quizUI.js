@@ -170,6 +170,20 @@ const QuizUI = {
             ));
     },
 
+    // Display true/false question
+    displayTrueFalse: function(question, index, questionBody) {
+        const tfOptions = $('<div>').addClass('options');
+        ['true', 'false'].forEach(option => {
+            tfOptions.append(`
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="q${index}" value="${option}">
+                    <label class="form-check-label">${option}</label>
+                </div>
+            `);
+        });
+        questionBody.append(tfOptions);
+    },
+
     // Display quiz questions
     displayQuiz: function(quiz) {
         const questionsContainer = $('#questions');
@@ -192,6 +206,9 @@ const QuizUI = {
                     break;
                 case 'fill_blank':
                     this.displayFillBlank(question, index, questionBody);
+                    break;
+                case 'true_false':
+                    this.displayTrueFalse(question, index, questionBody);
                     break;
             }
 
