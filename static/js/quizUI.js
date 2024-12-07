@@ -386,67 +386,95 @@ const QuizUI = {
             const answerBlock = $('<div>')
                 .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`);
 
-            // Question header with badge
             answerBlock.append(
-                $('<div>')
-                    .addClass('d-flex align-items-center mb-2')
-                    .append(
-                        $('<strong>').text(`Question ${index + 1}`),
-                        badge
-                    )
+                this.createAnswerHeader(index, badge),
+                this.createAnswerDetails(answer),
+                this.createExplanationBlock(answer)
             );
-
-            // Question text and answers
-            answerBlock.append(
-                $('<div>').addClass('question-text mb-2').text(answer.questionText),
-                $('<div>').text(`Your answer: ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}`),
-                $('<div>').text(`Correct answer: ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}`)
-            );
-
-            // Add explanation block if available
-            if (answer.explanation) {
-                const explanationBlock = $('<div>')
-                    .addClass('explanation-block mt-3')
-                    .append(
-                        $('<div>').addClass('explanation-title').text('Explanation:'),
-                        $('<div>').addClass('explanation-text').text(answer.explanation)
-                    );
-
-                // Add references if available
-                if (answer.references && answer.references.length > 0) {
-                    const referencesList = $('<ul>').addClass('references-list');
-                    answer.references.forEach(ref => {
-                        referencesList.append(
-                            $('<li>').append(
-                                $('<a>')
-                                    .attr({
-                                        href: ref,
-                                        target: '_blank',
-                                        rel: 'noopener noreferrer'
-                                    })
-                                    .text('Learn more')
-                            )
-                        );
-                    });
-                    explanationBlock.append(referencesList);
-                }
-
-                answerBlock.append(explanationBlock);
-            }
             
             resultDiv.append(answerBlock);
             resultsContent.append(resultDiv);
         });
-        
-        // Score summary
-        const score = Math.round((correctCount / answers.length) * 100);
-        resultsContent.prepend(
+
+        this.displayScoreSummary(correctCount, answers.length);
+        this.showResultsModal();
+    },
+
+    createAnswerHeader: function(index, badge) {
+        return $('<div>')
+            .addClass('d-flex align-items-center mb-2')
+            .append(
+                $('<strong>').text(`Question ${index + 1}`),
+                badge
+            );
+    },
+
+    createAnswerDetails: function(answer) {
+        return $('<div>').append(
+            $('<div>').addClass('question-text mb-2').text(answer.questionText),
+            $('<div>').addClass('user-answer').html(`
+                <strong>Your answer:</strong> 
+                ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer || 'No answer provided'}
+            `),
+            $('<div>').addClass('correct-answer').html(`
+                <strong>Correct answer:</strong> 
+                ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}
+            `)
+        );
+    },
+
+    createExplanationBlock: function(answer) {
+        if (!answer.explanation && (!answer.references || !answer.references.length)) {
+            return '';
+        }
+
+        const explanationBlock = $('<div>').addClass('explanation-block mt-3');
+
+        if (answer.explanation) {
+            explanationBlock.append(
+                $('<div>').addClass('explanation-title').text('Explanation:'),
+                $('<div>').addClass('explanation-text').text(answer.explanation)
+            );
+        }
+
+        if (answer.references && answer.references.length > 0) {
+            const referencesList = $('<div>').addClass('mt-2');
+            referencesList.append($('<div>').addClass('explanation-title').text('Learn more:'));
+            
+            const linksList = $('<ul>').addClass('references-list');
+            answer.references.forEach((ref, index) => {
+                linksList.append(
+                    $('<li>').append(
+                        $('<a>')
+                            .attr({
+                                href: ref,
+                                target: '_blank',
+                                rel: 'noopener noreferrer'
+                            })
+                            .text(`Reference ${index + 1}`)
+                    )
+                );
+            });
+            referencesList.append(linksList);
+            explanationBlock.append(referencesList);
+        }
+
+        return explanationBlock;
+    },
+
+    displayScoreSummary: function(correctCount, total) {
+        const score = Math.round((correctCount / total) * 100);
+        $('#resultsContent').prepend(
             $('<div>')
                 .addClass('alert alert-info mb-4')
-                .html(`<strong>Your Score: ${score}%</strong> (${correctCount} out of ${answers.length} correct)`)
+                .html(`
+                    <strong>Your Score: ${score}%</strong> 
+                    (${correctCount} out of ${total} correct)
+                `)
         );
-        
-        // Show results modal
+    },
+
+    showResultsModal: function() {
         const resultsModal = new bootstrap.Modal('#resultsModal');
         resultsModal.show();
     },
