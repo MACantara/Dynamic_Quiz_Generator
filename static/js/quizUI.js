@@ -308,13 +308,21 @@ const QuizUI = {
             
             if (isCorrect) correctCount++;
             
+            const badge = $('<span>')
+                .addClass(`badge ${isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
+                .text(isCorrect ? 'Correct' : 'Incorrect');
+            
             resultDiv.append(
                 $('<div>')
                     .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`)
                     .append(
-                        $('<strong>').text(`Question ${index + 1}: `),
+                        $('<div>')
+                            .addClass('d-flex align-items-center mb-2')
+                            .append(
+                                $('<strong>').text(`Question ${index + 1}`),
+                                badge
+                            ),
                         $('<div>').addClass('question-text mb-2').text(answer.questionText),
-                        $('<span>').text(isCorrect ? 'Correct!' : 'Incorrect'),
                         $('<div>').text(`Your answer: ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}`),
                         $('<div>').text(`Correct answer: ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}`)
                     )
