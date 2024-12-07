@@ -1,10 +1,13 @@
 import json
 from services.ai_service import AIService
+from werkzeug.exceptions import GatewayTimeout
+import time
 
 class QuizService:
     def __init__(self):
         self.ai_service = AIService()
         self.MAX_QUESTIONS = 20
+        self.TIMEOUT = 40  # 240 second timeout
 
     def _create_prompt(self, topic, num_questions, question_types):
         return f"""Generate a quiz about {topic} containing exactly {num_questions} questions.
@@ -123,7 +126,6 @@ class QuizService:
         if text.endswith('```'):
             text = text[:-3]
         return text.strip()
-
     def generate_quiz(self, topic, num_questions, question_types):
         try:
             # Ensure num_questions is within limits
