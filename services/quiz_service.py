@@ -119,4 +119,27 @@ class QuizService:
     def _clean_response(self, text):
         # Clean the response to ensure it's valid JSON
         text = text.strip()
-        if text.startswith('
+        if text.startswith('```json'):
+            text = text[7:]
+        if text.startswith('```'):
+            text = text[3:]
+        if text.endswith('```'):
+            text = text[:-3]
+        return text.strip()
+    def generate_quiz(self, topic, num_questions, question_types):
+        try:
+            # Ensure num_questions is within limits
+            num_questions = min(max(num_questions, 1), self.MAX_QUESTIONS)
+            prompt = self._create_prompt(topic, num_questions, question_types)
+            
+            # Pass topic for context-aware generation
+            response = self.ai_service.generate_content(prompt, topic=topic)
+            cleaned_text = self._clean_response(response.text)
+            
+            # Parse the JSON to validate it
+            quiz_data = json.loads(cleaned_text)
+            return cleaned_text
+        except Exception as e:
+            print(f"Error parsing quiz response: {e}")
+            print(f"Raw response: {response.text if 'response' in locals() else 'No response generated'}")
+            return '{"questions": []}'  # Return empty quiz on error
