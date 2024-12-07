@@ -8,6 +8,10 @@ class QuizService:
     def _create_prompt(self, topic, num_questions, question_types):
         return f"""Generate a quiz about {topic} containing exactly {num_questions} questions.
         Use only the following question types: {', '.join(question_types)}. Ensure that the number of questions matches the specified number ({num_questions}) without exception.
+        
+        Strictly follow these rules:
+        - Do not deviate from the specified formats for each question type.
+        - Ensure consistency in the formatting of the JSON output.
 
         For true/false questions, always use boolean values (true/false) in lowercase for the correct_answer.
 
@@ -19,6 +23,7 @@ class QuizService:
         - Create a drag and drop interface where students match code fragments
         - Focus on certification-style problem-solving
         - Include context, requirements, and specific instructions
+        - Do not modify the example format provided below
         Example:
         {{"type": "coding", 
         "question": "A network engineer needs to implement a secure Python function for user authentication. Complete the function by dragging the correct code fragments into the blanks.", 
@@ -53,6 +58,7 @@ class QuizService:
         - Mark the blank spot with exactly five underscores (_____) where the dropdown will appear
         - Include 4-5 plausible options that could fit grammatically in the blank
         - The question should read naturally when any option is selected
+        - Do not modify the example format provided below.
         Example:
         {{"type": "fill_blank", 
         "question": "The _____ protocol is used to securely transfer files between a client and server.",
