@@ -98,7 +98,9 @@ const QuizLogic = {
                     userAnswer: userAnswer,
                     correctAnswer: correctAnswer,
                     isCorrect: this.compareAnswers(userAnswer, correctAnswer),
-                    type: question.type
+                    type: question.type,
+                    explanation: question.explanation,
+                    references: question.references
                 });
             });
 
