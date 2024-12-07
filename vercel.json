@@ -19,7 +19,7 @@
     "env": {
         "GOOGLE_SEARCH_API_KEY": "AIzaSyDCgTusHsI-bw81HagZl0-6uNe7VTCZZBg",
         "GOOGLE_SEARCH_ENGINE_ID": "c10d2fc4f8ba442c9",
-        "MAX_EXECUTION_TIME": "30",
+        "MAX_EXECUTION_TIME": "40",
         "PYTHON_MEMORY_MB": "1024"
     }
 }
