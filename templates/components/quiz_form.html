@@ -1,0 +1,25 @@
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form id="quizForm">
+            <div class="mb-3">
+                <label for="topic" class="form-label">Quiz Topic</label>
+                <input type="text" class="form-control" id="topic" required>
+            </div>
+            <div class="mb-3">
+                <label for="numQuestions" class="form-label">Number of Questions</label>
+                <input type="number" class="form-control" id="numQuestions" min="1" max="20" value="5">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Question Types</label>
+                {% for type in question_types %}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="{{ type.value }}" id="{{ type.id }}" checked>
+                    <label class="form-check-label" for="{{ type.id }}">{{ type.label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary">Generate Quiz</button>
+        </form>
+    </div>
+</div>
