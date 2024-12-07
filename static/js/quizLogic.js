@@ -93,9 +93,11 @@ const QuizLogic = {
                 });
 
                 answers.push({
+                    questionText: question.question,
                     userAnswer: userAnswer,
                     correctAnswer: correctAnswer,
-                    isCorrect: this.compareAnswers(userAnswer, correctAnswer)
+                    isCorrect: this.compareAnswers(userAnswer, correctAnswer),
+                    type: question.type
                 });
             });
 
