@@ -9,6 +9,8 @@ A Flask-based web application that generates customized quizzes using Google's G
   - Multiple Choice
   - True/False
   - Coding Questions (drag and drop style)
+  - Fill in the blanks
+  - Drag and drop questions
 - Clean and responsive user interface
 - Powered by Google's Gemini AI for intelligent question generation
 
