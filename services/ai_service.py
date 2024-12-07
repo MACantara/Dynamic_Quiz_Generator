@@ -5,7 +5,7 @@ from services.search_service import SearchService
 
 class AIService:
     def __init__(self):
-        genai.configure(api_key=Config.GEMINI_API_KEY)
+        genai.configure(api_key=Config.PRIMARY_GEMINI_API_KEY)
         self.model = genai.GenerativeModel('gemini-1.5-flash')
         self.search_service = SearchService()
     
