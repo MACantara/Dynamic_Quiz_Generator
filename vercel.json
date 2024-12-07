@@ -3,7 +3,11 @@
     "builds": [
         {
             "src": "app.py",
-            "use": "@vercel/python"
+            "use": "@vercel/python",
+            "config": {
+                "maxLambdaSize": "15mb",
+                "runtime": "python3.9"
+            }
         }
     ],
     "routes": [
@@ -14,12 +18,8 @@
     ],
     "env": {
         "GOOGLE_SEARCH_API_KEY": "AIzaSyDCgTusHsI-bw81HagZl0-6uNe7VTCZZBg",
-        "GOOGLE_SEARCH_ENGINE_ID": "c10d2fc4f8ba442c9"
-    },
-    "functions": {
-        "app.py": {
-            "memory": 1024,
-            "maxDuration": 30
-        }
+        "GOOGLE_SEARCH_ENGINE_ID": "c10d2fc4f8ba442c9",
+        "MAX_EXECUTION_TIME": "30",
+        "PYTHON_MEMORY_MB": "1024"
     }
 }
