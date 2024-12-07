@@ -129,7 +129,9 @@ class QuizService:
             # Ensure num_questions is within limits
             num_questions = min(max(num_questions, 1), self.MAX_QUESTIONS)
             prompt = self._create_prompt(topic, num_questions, question_types)
-            response = self.ai_service.generate_content(prompt)
+            
+            # Pass topic for context-aware generation
+            response = self.ai_service.generate_content(prompt, topic=topic)
             cleaned_text = self._clean_response(response.text)
             
             # Parse the JSON to validate it
