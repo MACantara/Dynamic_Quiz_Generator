@@ -130,16 +130,29 @@ class QuizService:
     def generate_quiz(self, topic, num_questions, question_types):
         try:
             # Ensure num_questions is within limits
-            num_questions = min(max(num_questions, 1), self.MAX_QUESTIONS)
+            num_questions = min(max(int(num_questions), 1), self.MAX_QUESTIONS)
             prompt = self._create_prompt(topic, num_questions, question_types)
             
             # Pass topic for context-aware generation
             response = self.ai_service.generate_content(prompt, topic=topic)
             cleaned_text = self._clean_response(response.text)
             
-            # Parse the JSON to validate it
+            # Parse and validate the JSON
             quiz_data = json.loads(cleaned_text)
-            return cleaned_text
+            
+            # Ensure we have a questions array
+            if not isinstance(quiz_data, dict) or 'questions' not in quiz_data:
+                if isinstance(quiz_data, list):
+                    quiz_data = {'questions': quiz_data}
+                else:
+                    raise ValueError("Invalid quiz data format")
+            
+            # Validate number of questions
+            if len(quiz_data['questions']) != num_questions:
+                raise ValueError(f"Generated quiz has {len(quiz_data['questions'])} questions, expected {num_questions}")
+            
+            # Return the cleaned and validated quiz data
+            return json.dumps(quiz_data)
         except Exception as e:
             print(f"Error parsing quiz response: {e}")
             print(f"Raw response: {response.text if 'response' in locals() else 'No response generated'}")
