@@ -33,11 +33,11 @@ const QuizUI = {
     displayMultipleChoice: function(question, index, questionBody) {
         const shuffledOptions = this.shuffleArray(question.options);
         const mcOptions = $('<div>').addClass('options');
-        shuffledOptions.forEach(option => {
+        shuffledOptions.forEach((option, optionIndex) => {
             mcOptions.append(`
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="q${index}" value="${option}">
-                    <label class="form-check-label">${option}</label>
+                    <input class="form-check-input" type="radio" name="q${index}" id="q${index}_${optionIndex}" value="${option}">
+                    <label class="form-check-label w-100 cursor-pointer" for="q${index}_${optionIndex}">${option}</label>
                 </div>
             `);
         });
@@ -198,11 +198,11 @@ const QuizUI = {
     // Display true/false question
     displayTrueFalse: function(question, index, questionBody) {
         const tfOptions = $('<div>').addClass('options');
-        ['True', 'False'].forEach(option => {
+        ['True', 'False'].forEach((option, optionIndex) => {
             tfOptions.append(`
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="q${index}" value="${option.toLowerCase()}">
-                    <label class="form-check-label">${option}</label>
+                    <input class="form-check-input" type="radio" name="q${index}" id="q${index}_${optionIndex}" value="${option.toLowerCase()}">
+                    <label class="form-check-label w-100 cursor-pointer" for="q${index}_${optionIndex}">${option}</label>
                 </div>
             `);
         });
