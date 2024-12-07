@@ -1,4 +1,3 @@
-
 from googleapiclient.discovery import build
 from config import Config
 
@@ -44,10 +43,17 @@ class SearchService:
         
         # Format results for prompt context
         context = []
+        references = []
+        
         for result in results:
             context.append(f"Source: {result['source']}\nURL: {result['link']}\n{result['snippet']}\n")
+            references.append({
+                'url': result['link'],
+                'title': result['title'],
+                'source': result['source']
+            })
         
         return {
             'context': '\n'.join(context),
-            'references': [r['link'] for r in results]
+            'references': references
         }
