@@ -131,7 +131,8 @@ const QuizUI = {
     cloneDragItem: function(originalItem) {
         const option = originalItem.attr('data-value');
         const questionIndex = originalItem.closest('[data-question]').attr('data-question');
-        return this.createDragItem(option, questionIndex, false); // Set isOriginal to false for clones
+        const clone = this.createDragItem(option, questionIndex, false);
+        return clone;
     },
 
     // Handle remove item click
@@ -267,6 +268,16 @@ const QuizUI = {
         quiz.questions.forEach((question, index) => {
             const questionDiv = $('<div>').addClass('card mb-3');
             const questionBody = $('<div>').addClass('card-body');
+            
+            // Add question number header
+            const questionHeader = $('<div>')
+                .addClass('d-flex align-items-center mb-3')
+                .append(
+                    $('<h5>')
+                        .addClass('card-title mb-0')
+                        .text(`Question ${index + 1}`)
+                );
+            questionBody.append(questionHeader);
             
             if (question.type !== 'fill_blank') {
                 questionBody.append($('<p>').addClass('card-text').text(question.question));
