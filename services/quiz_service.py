@@ -126,6 +126,7 @@ class QuizService:
         if text.endswith('```'):
             text = text[:-3]
         return text.strip()
+    
     def generate_quiz(self, topic, num_questions, question_types):
         try:
             # Ensure num_questions is within limits
