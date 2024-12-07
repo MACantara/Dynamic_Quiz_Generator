@@ -7,32 +7,46 @@ class QuizService:
         self.MAX_QUESTIONS = 20
 
     def _create_prompt(self, topic, num_questions, question_types):
-        return f"""Generate a quiz about {topic} with {num_questions} questions.
-        Include only the following question types: {', '.join(question_types)}.
-        For true/false questions, always use boolean values (true/false) in lowercase for correct_answer.
+        return f"""Generate a quiz about {topic} containing exactly {num_questions} questions.
+        Use only the following question types: {', '.join(question_types)}. Ensure that the number of questions matches the specified number ({num_questions}) without exception.
+        
+        Strictly follow these rules:
+        - Challenge users with critical thinking, reading comprehension, and problem-solving.
+        - Balance the difficulty of questions to progressively challenge learners while being fair.
+        - Do not deviate from the specified formats for each question type.
+        - Ensure consistency in the formatting of the JSON output.
+
+        For true/false questions, always use boolean values (true/false) in lowercase for the correct_answer.
 
         Follow these specific formats for each question type:
 
         1. For coding questions (drag and drop style):
-        - Provide a complete code scenario with missing parts
+        - Provide a code scenario with exactly three missing parts
+        - Clearly state the scenario, requirements, and instructions
+        - Mark the missing parts with exactly five underscores (_____)
         - Create a drag and drop interface where students match code fragments
-        - Focus on certification-style problem-solving
+        - Include three correct code fragments and at least three distractors
+        - Use realistic, practical problems aligned with certification-style challenges
         - Include context, requirements, and specific instructions
+        - Do not modify the example format provided below
         Example:
-        {{"type": "coding", 
-          "question": "A network engineer needs to implement a secure Python function for user authentication. Complete the function by dragging the correct code fragments into the blanks.", 
-          "code_template": "def authenticate_user(username, password):\\n    # Validate username\\n    if not _____:\\n        return False\\n    \\n    # Hash password\\n    hashed_password = _____\\n    \\n    # Check against stored credentials\\n    return _____", 
-          "options": [
-            "len(username) > 3", 
-            "hashlib.sha256(password.encode()).hexdigest()", 
-            "stored_credentials.get(username) == hashed_password"
-          ],
-          "descriptions": [
-            "Username length check", 
-            "Password hashing", 
-            "Credential verification"
-          ],
-          "correct_answer": ["len(username) > 3", "hashlib.sha256(password.encode()).hexdigest()", "stored_credentials.get(username) == hashed_password"]
+        {{
+            "type": "coding", 
+            "question": "A developer needs to implement a Python function to calculate compound interest. Complete the function by dragging the correct code fragments into the blanks.", 
+            "code_template": "def calculate_compound_interest(principal, rate, time):\\n    # Calculate the amount\\n    amount = principal * (1 + _____)**time\\n    \\n    # Calculate interest\\n    interest = _____\\n    return _____", 
+            "options": [
+                "rate / 100", 
+                "amount - principal", 
+                "principal", 
+                "rate * time", 
+                "principal + rate"
+            ],
+            "descriptions": [
+                "Convert rate to decimal", 
+                "Calculate interest", 
+                "Return the correct value"
+            ],
+            "correct_answer": ["rate / 100", "amount - principal", "interest"]
         }}
 
         2. For drag and drop questions:
@@ -41,26 +55,38 @@ class QuizService:
         - Include a specific instruction like "Match the following [items] with their [descriptions]:" or "Arrange the following [items] in the correct order:"
         - Provide items on the left and descriptions/slots on the right
         - The options array should contain the draggable items
-        - Include a descriptions array for matching questions
+        - Include options (draggable items) and descriptions (match targets or sequence steps).
         Example for matching:
-        {{"type": "drag_drop", "question": "Match the following network protocols with their primary functions:", "options": ["HTTPS", "DNS", "DHCP", "SMTP"], "descriptions": ["Secure web browsing", "Domain name resolution", "IP address assignment", "Email transmission"], "correct_answer": ["HTTPS", "DNS", "DHCP", "SMTP"]}}
+        {{
+            "type": "drag_drop", 
+            "question": "Match the following data structures with their common use cases:", 
+            "options": ["Array", "Stack", "Queue", "Hash Map"], 
+            "descriptions": ["Static data storage", "Last-In-First-Out operations", "First-In-First-Out operations", "Key-value pair storage"], 
+            "correct_answer": ["Array", "Stack", "Queue", "Hash Map"]
+        }}
         Example for ordering:
-        {{"type": "drag_drop", "question": "Arrange the following steps of the TCP three-way handshake in the correct order:", "options": ["ACK", "SYN", "SYN-ACK"], "descriptions": ["Step 1", "Step 2", "Step 3"], "correct_answer": ["SYN", "SYN-ACK", "ACK"]}}
+        {{
+            "type": "drag_drop", 
+            "question": "Arrange the following steps of the software development lifecycle in the correct order:", 
+            "options": ["Testing", "Implementation", "Design", "Requirements Analysis"], 
+            "descriptions": ["Step 1", "Step 2", "Step 3", "Step 4"], 
+            "correct_answer": ["Requirements Analysis", "Design", "Implementation", "Testing"]
+        }}
 
         3. For fill-in-the-blank questions:
         - Format questions with a clear sentence where one term needs to be filled in
         - Mark the blank spot with exactly five underscores (_____) where the dropdown will appear
         - Include 4-5 plausible options that could fit grammatically in the blank
         - The question should read naturally when any option is selected
-        - Do not repeat the question text or include any additional formatting
+        - Do not modify the example format provided below.
         Example:
         {{"type": "fill_blank", 
-          "question": "The _____ protocol is used to securely transfer files between a client and server.",
-          "options": ["SFTP", "HTTP", "SMTP", "ICMP"],
-          "correct_answer": "SFTP"
+        "question": "The _____ protocol is used to securely transfer files between a client and server.",
+        "options": ["SFTP", "HTTP", "SMTP", "ICMP"],
+        "correct_answer": "SFTP"
         }}
 
-        Return a valid JSON object with this exact structure (no markdown, no code blocks):
+        Ensure the total number of questions equals {num_questions}, and return a valid JSON object (no markdown, no code blocks) with the following structure:
         {{"questions": [
             {{"type": "question_type", "question": "question_text", "options": ["option1", "option2"], "descriptions": ["desc1", "desc2"], "correct_answer": "answer"}}
         ]}}
