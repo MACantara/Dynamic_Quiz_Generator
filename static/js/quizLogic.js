@@ -27,9 +27,11 @@ const QuizLogic = {
             };
 
             QuizUI.showLoading();
+            $('#loadingMessage').text('Searching for relevant information...');
 
             try {
                 const response = await QuizAPI.generateQuiz(quizConfig);
+                $('#loadingMessage').text('Generating quiz questions...');
                 this.currentQuiz = QuizAPI.parseQuizData(response);
                 QuizUI.displayQuiz(this.currentQuiz);
                 $('#quizContainer').removeClass('d-none');
@@ -38,6 +40,7 @@ const QuizLogic = {
                 alert('Error generating quiz. Please try again.');
             } finally {
                 QuizUI.hideLoading();
+                $('#loadingMessage').text('');
             }
         });
     },
@@ -48,7 +51,9 @@ const QuizLogic = {
             if (!this.currentQuiz) return;
 
             const timeSpent = QuizUI.timeLimit - QuizUI.timeRemaining;
-            const answers = [];
+
+            const answers = this.gatherAnswers();
+
             this.currentQuiz.questions.forEach((question, index) => {
                 console.log(`Processing Question ${index + 1}:`, question);
 
@@ -106,9 +111,72 @@ const QuizLogic = {
 
             QuizUI.displayResults(answers);
             
-            // Log time spent (you could send this to the server if needed)
             console.log(`Time spent: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s`);
         });
+    },
+
+    gatherAnswers: function() {
+        const answers = [];
+        this.currentQuiz.questions.forEach((question, index) => {
+            const userAnswer = this.getUserAnswer(question, index);
+            answers.push({
+                questionText: question.question,
+                userAnswer: userAnswer,
+                correctAnswer: question.correct_answer,
+                isCorrect: this.compareAnswers(userAnswer, question.correct_answer),
+                type: question.type,
+                explanation: question.explanation,
+                references: question.references
+            });
+        });
+        return answers;
+    },
+
+    getUserAnswer: function(question, index) {
+        switch (question.type) {
+            case 'multiple_choice':
+            case 'fill_blank':
+            case 'true_false':
+                return $(`[name="q${index}"]:checked`).val() || 
+                       $(`select[name="q${index}"]`).val();
+
+            case 'drag_drop':
+                return question.descriptions ? 
+                    this.getMatchingAnswers(index) : 
+                    this.getOrderingAnswers(index);
+
+            case 'coding':
+                return this.getCodingAnswers(index);
+
+            default:
+                return null;
+        }
+    },
+
+    getMatchingAnswers: function(index) {
+        const answers = [];
+        $(`.drop-zone-item[data-question="${index}"]`).each(function() {
+            const dragItem = $(this).find('.drag-item');
+            answers.push(dragItem.length ? dragItem.attr('data-value') : null);
+        });
+        return answers;
+    },
+
+    getOrderingAnswers: function(index) {
+        const answers = [];
+        $(`.ordering-zone[data-question="${index}"] .drag-item`).each(function() {
+            answers.push($(this).attr('data-value'));
+        });
+        return answers;
+    },
+
+    getCodingAnswers: function(index) {
+        const answers = [];
+        $(`.coding-drop-zone[data-question="${index}"]`).each(function() {
+            const dragItem = $(this).find('.drag-item');
+            answers.push(dragItem.length ? dragItem.attr('data-value') : null);
+        });
+        return answers;
     },
 
     // Compare user answers with correct answers
