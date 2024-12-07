@@ -187,19 +187,42 @@ const QuizUI = {
     // Display coding question
     displayCoding: function(question, index, questionBody) {
         const codingContainer = $('<div>').addClass('coding-container');
-        const parts = question.code_template.split('_____');
+        let dropZoneCounter = 0;
+
+        // Split code template into lines while preserving indentation
+        const codeLines = question.code_template.split('\n');
         
-        parts.forEach((part, i) => {
-            codingContainer.append($('<pre>').text(part));
-            if (i < parts.length - 1) {
-                const dropZone = $('<div>')
-                    .addClass('drop-zone-item coding-drop-zone')
-                    .attr('data-question', index)
-                    .attr('data-index', i);
-                codingContainer.append(dropZone);
+        codeLines.forEach((line, lineIndex) => {
+            const codeLine = $('<div>').addClass('code-line');
+            
+            // Calculate leading spaces for indentation
+            const leadingSpaces = line.match(/^\s*/)[0];
+            if (leadingSpaces) {
+                codeLine.append($('<span>').addClass('code-indent').text(leadingSpaces));
             }
+
+            // Split line by drop zones
+            const parts = line.trim().split('_____');
+            parts.forEach((part, partIndex) => {
+                // Add code part
+                codeLine.append($('<span>').addClass('code-block').text(part));
+                
+                // Add drop zone if not the last part
+                if (partIndex < parts.length - 1) {
+                    const dropZone = $('<div>')
+                        .addClass('drop-zone-item coding-drop-zone')
+                        .attr({
+                            'data-question': index,
+                            'data-index': dropZoneCounter++
+                        });
+                    codeLine.append(dropZone);
+                }
+            });
+            
+            codingContainer.append(codeLine);
         });
 
+        // Create options container with available code snippets
         const codingOptionsContainer = $('<div>')
             .addClass('coding-options-container')
             .attr('data-question', index);
