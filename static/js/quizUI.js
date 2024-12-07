@@ -1,6 +1,11 @@
 // quizUI.js - Handles all UI-related functionality
 
 const QuizUI = {
+    // Add timer properties
+    timer: null,
+    timeLimit: 3600, // Default: 1 hour in seconds
+    timeRemaining: 0,
+
     // Utility function to shuffle an array
     shuffleArray: function(array) {
         const shuffledArray = [...array];
@@ -271,6 +276,11 @@ const QuizUI = {
 
     // Display quiz questions
     displayQuiz: function(quiz) {
+        this.setQuizTime();
+        // Reset timer
+        this.timeRemaining = this.timeLimit;
+        this.startTimer();
+        
         const questionsContainer = $('#questions');
         questionsContainer.empty();
 
@@ -315,8 +325,49 @@ const QuizUI = {
         });
     },
 
+    startTimer: function() {
+        if (this.timer) {
+            clearInterval(this.timer);
+        }
+
+        const updateDisplay = () => {
+            const minutes = Math.floor(this.timeRemaining / 60);
+            const seconds = this.timeRemaining % 60;
+            $('#timerDisplay').text(
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+            );
+
+            // Add warning classes
+            const $timer = $('#quizTimer');
+            if (this.timeRemaining <= 300) { // 5 minutes
+                $timer.removeClass('warning').addClass('danger');
+            } else if (this.timeRemaining <= 600) { // 10 minutes
+                $timer.removeClass('danger').addClass('warning');
+            }
+        };
+
+        updateDisplay();
+        this.timer = setInterval(() => {
+            this.timeRemaining--;
+            updateDisplay();
+
+            if (this.timeRemaining <= 0) {
+                clearInterval(this.timer);
+                $('#submitQuiz').click(); // Auto-submit when time expires
+            }
+        }, 1000);
+    },
+
+    stopTimer: function() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    },
+
     // Display quiz results
     displayResults: function(answers) {
+        this.stopTimer(); // Stop timer when showing results
         $('#quizContainer').addClass('d-none');
         const resultsContent = $('#resultsContent');
         resultsContent.empty();
@@ -361,5 +412,23 @@ const QuizUI = {
         // Show results modal
         const resultsModal = new bootstrap.Modal('#resultsModal');
         resultsModal.show();
-    }
+    },
+
+    initializeTimer: function() {
+        // Show/hide custom time input based on selection
+        $('#quizTime').on('change', function() {
+            const customTime = $(this).val() === 'custom';
+            $('#customTimeInput').toggleClass('d-none', !customTime);
+        });
+    },
+
+    setQuizTime: function() {
+        const selectedTime = $('#quizTime').val();
+        if (selectedTime === 'custom') {
+            const customMinutes = parseInt($('#customMinutes').val()) || 60;
+            this.timeLimit = Math.min(Math.max(customMinutes, 1), 180) * 60;
+        } else {
+            this.timeLimit = parseInt(selectedTime);
+        }
+    },
 };

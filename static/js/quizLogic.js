@@ -47,6 +47,7 @@ const QuizLogic = {
         $('#submitQuiz').on('click', () => {
             if (!this.currentQuiz) return;
 
+            const timeSpent = QuizUI.timeLimit - QuizUI.timeRemaining;
             const answers = [];
             this.currentQuiz.questions.forEach((question, index) => {
                 console.log(`Processing Question ${index + 1}:`, question);
@@ -102,6 +103,9 @@ const QuizLogic = {
             });
 
             QuizUI.displayResults(answers);
+            
+            // Log time spent (you could send this to the server if needed)
+            console.log(`Time spent: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s`);
         });
     },
 
