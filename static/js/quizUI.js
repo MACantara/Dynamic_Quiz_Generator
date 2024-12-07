@@ -367,14 +367,14 @@ const QuizUI = {
 
     // Display quiz results
     displayResults: function(answers) {
-        this.stopTimer(); // Stop timer when showing results
+        this.stopTimer();
         $('#quizContainer').addClass('d-none');
         const resultsContent = $('#resultsContent');
         resultsContent.empty();
         
         let correctCount = 0;
         answers.forEach((answer, index) => {
-            const resultDiv = $('<div>').addClass('mb-3');
+            const resultDiv = $('<div>').addClass('mb-4');
             const isCorrect = answer.isCorrect;
             
             if (isCorrect) correctCount++;
@@ -383,29 +383,66 @@ const QuizUI = {
                 .addClass(`badge ${isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
                 .text(isCorrect ? 'Correct' : 'Incorrect');
             
-            resultDiv.append(
+            const answerBlock = $('<div>')
+                .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`);
+
+            // Question header with badge
+            answerBlock.append(
                 $('<div>')
-                    .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`)
+                    .addClass('d-flex align-items-center mb-2')
                     .append(
-                        $('<div>')
-                            .addClass('d-flex align-items-center mb-2')
-                            .append(
-                                $('<strong>').text(`Question ${index + 1}`),
-                                badge
-                            ),
-                        $('<div>').addClass('question-text mb-2').text(answer.questionText),
-                        $('<div>').text(`Your answer: ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}`),
-                        $('<div>').text(`Correct answer: ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}`)
+                        $('<strong>').text(`Question ${index + 1}`),
+                        badge
                     )
             );
+
+            // Question text and answers
+            answerBlock.append(
+                $('<div>').addClass('question-text mb-2').text(answer.questionText),
+                $('<div>').text(`Your answer: ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}`),
+                $('<div>').text(`Correct answer: ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}`)
+            );
+
+            // Add explanation block if available
+            if (answer.explanation) {
+                const explanationBlock = $('<div>')
+                    .addClass('explanation-block mt-3')
+                    .append(
+                        $('<div>').addClass('explanation-title').text('Explanation:'),
+                        $('<div>').addClass('explanation-text').text(answer.explanation)
+                    );
+
+                // Add references if available
+                if (answer.references && answer.references.length > 0) {
+                    const referencesList = $('<ul>').addClass('references-list');
+                    answer.references.forEach(ref => {
+                        referencesList.append(
+                            $('<li>').append(
+                                $('<a>')
+                                    .attr({
+                                        href: ref,
+                                        target: '_blank',
+                                        rel: 'noopener noreferrer'
+                                    })
+                                    .text('Learn more')
+                            )
+                        );
+                    });
+                    explanationBlock.append(referencesList);
+                }
+
+                answerBlock.append(explanationBlock);
+            }
             
+            resultDiv.append(answerBlock);
             resultsContent.append(resultDiv);
         });
         
+        // Score summary
         const score = Math.round((correctCount / answers.length) * 100);
         resultsContent.prepend(
             $('<div>')
-                .addClass('alert alert-info')
+                .addClass('alert alert-info mb-4')
                 .html(`<strong>Your Score: ${score}%</strong> (${correctCount} out of ${answers.length} correct)`)
         );
         
