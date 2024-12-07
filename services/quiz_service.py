@@ -60,7 +60,7 @@ class QuizService:
         "correct_answer": "SFTP"
         }}
 
-        Ensure the total number of questions equals {num_questions}, and return a valid JSON object with the following structure:
+        Ensure the total number of questions equals {num_questions}, and return a valid JSON object (no markdown, no code blocks) with the following structure:
         {{"questions": [
             {{"type": "question_type", "question": "question_text", "options": ["option1", "option2"], "descriptions": ["desc1", "desc2"], "correct_answer": "answer"}}
         ]}}
