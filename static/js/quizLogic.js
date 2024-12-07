@@ -107,38 +107,25 @@ const QuizLogic = {
     compareAnswers: function(userAnswer, correctAnswer) {
         console.log('Comparing Answers:', {
             userAnswer: userAnswer, 
-            correctAnswer: correctAnswer,
-            userAnswerType: typeof userAnswer,
-            correctAnswerType: typeof correctAnswer
+            correctAnswer: correctAnswer
         });
 
-        // Normalize true/false values
-        const normalizeBooleanValue = (value) => {
-            // Convert string to boolean if needed
-            if (typeof value === 'string') {
-                return value.toLowerCase().trim() === 'true';
-            }
-            // If already a boolean, return as is
-            if (typeof value === 'boolean') {
-                return value;
-            }
-            // For any other type, return false
-            return false;
-        };
+        // Handle true/false questions
+        if (typeof correctAnswer === 'string' && 
+            (correctAnswer.toLowerCase() === 'true' || correctAnswer.toLowerCase() === 'false')) {
+            const normalizedUser = String(userAnswer).toLowerCase() === 'true';
+            const normalizedCorrect = String(correctAnswer).toLowerCase() === 'true';
+            return normalizedUser === normalizedCorrect;
+        }
 
-        // Normalize both answers
-        const normalizedUserAnswer = normalizeBooleanValue(userAnswer);
-        const normalizedCorrectAnswer = normalizeBooleanValue(correctAnswer);
+        // Handle arrays (for drag_drop and coding questions)
+        if (Array.isArray(userAnswer) && Array.isArray(correctAnswer)) {
+            if (userAnswer.length !== correctAnswer.length) return false;
+            return userAnswer.every((val, idx) => val === correctAnswer[idx]);
+        }
 
-        // Compare normalized values
-        const result = normalizedUserAnswer === normalizedCorrectAnswer;
-        console.log('Normalized Comparison Result:', {
-            normalizedUserAnswer,
-            normalizedCorrectAnswer,
-            result
-        });
-
-        return result;
+        // Handle other question types
+        return String(userAnswer).toLowerCase() === String(correctAnswer).toLowerCase();
     },
 
     // Setup drag and drop functionality
