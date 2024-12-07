@@ -2,21 +2,13 @@ from flask import Flask
 from config import Config
 from routes.quiz_routes import quiz_bp
 
+# Create Flask app instance
 app = Flask(__name__)
+app.config.from_object(Config)
 
-@app.route('/')
-def home():
-    return 'Dynamic Quiz Generator'
+# Register blueprints
+app.register_blueprint(quiz_bp)
 
-def create_app():
-    app.config.from_object(Config)
-    
-    # Register blueprints
-    app.register_blueprint(quiz_bp)
-    
-    return app
-
-# Enable debug mode when running locally
+# Local development server
 if __name__ == '__main__':
-    app = create_app()
-    app.run(host=app.config['HOST'], port=app.config['PORT'], debug=True)
+    app.run(host=Config.HOST, port=Config.PORT, debug=Config.DEBUG)
