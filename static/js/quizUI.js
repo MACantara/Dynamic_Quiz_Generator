@@ -131,7 +131,7 @@ const QuizUI = {
     cloneDragItem: function(originalItem) {
         const option = originalItem.attr('data-value');
         const questionIndex = originalItem.closest('[data-question]').attr('data-question');
-        return this.createDragItem(option, questionIndex, true);
+        return this.createDragItem(option, questionIndex, false); // Set isOriginal to false for clones
     },
 
     // Handle remove item click
