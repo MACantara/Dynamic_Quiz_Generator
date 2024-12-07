@@ -64,7 +64,7 @@ const QuizUI = {
         
         const shuffledOptions = this.shuffleArray(question.options);
         shuffledOptions.forEach(option => {
-            dragDropItemsContainer.append(this.createDragItem(option, index));
+            dragDropItemsContainer.append(this.createDragItem(option, index, true));
         });
         
         dragDropLeftCol.append(dragDropItemsContainer);
@@ -103,23 +103,26 @@ const QuizUI = {
     },
 
     // Create a draggable item
-    createDragItem: function(option, index) {
+    createDragItem: function(option, index, isOriginal = true) {
         const dragItem = $('<div>')
             .addClass('drag-item mb-2')
             .attr('data-value', option)
-            .attr('data-source', 'container')
+            .attr('data-source', isOriginal ? 'container' : 'clone')
             .attr('draggable', 'true');
         
         const itemContent = $('<div>')
             .addClass('d-flex justify-content-between align-items-center')
             .append($('<span>').text(option));
         
-        const removeButton = $('<button>')
-            .addClass('btn btn-sm btn-outline-danger remove-item')
-            .html('<i class="fas fa-times"></i>')
-            .on('click', this.handleRemoveItem);
+        // Only add remove button for cloned items
+        if (!isOriginal) {
+            const removeButton = $('<button>')
+                .addClass('btn btn-sm btn-outline-danger remove-item')
+                .html('<i class="fas fa-times"></i>')
+                .on('click', this.handleRemoveItem);
+            itemContent.append(removeButton);
+        }
         
-        itemContent.append(removeButton);
         dragItem.append(itemContent);
         return dragItem;
     },
@@ -188,6 +191,19 @@ const QuizUI = {
     displayCoding: function(question, index, questionBody) {
         const codingContainer = $('<div>').addClass('row');
         
+        // Create a closure to maintain dropZoneCounter state
+        const createDropZone = (function() {
+            let dropZoneCounter = 0;
+            return function() {
+                return $('<div>')
+                    .addClass('drop-zone-item coding-drop-zone')
+                    .attr({
+                        'data-question': index,
+                        'data-index': dropZoneCounter++
+                    });
+            };
+        })();
+        
         // Left column - Code snippets
         const leftCol = $('<div>').addClass('col-md-4');
         leftCol.append($('<div>').addClass('drop-zone-label').text('Code Snippets:'));
@@ -198,7 +214,7 @@ const QuizUI = {
         
         const shuffledOptions = this.shuffleArray(question.options);
         shuffledOptions.forEach(option => {
-            dragItemsContainer.append(this.createDragItem(option, index));
+            dragItemsContainer.append(this.createDragItem(option, index, true));
         });
         
         leftCol.append(dragItemsContainer);
@@ -206,7 +222,6 @@ const QuizUI = {
         // Right column - Code display with drop zones
         const rightCol = $('<div>').addClass('col-md-8');
         const codeDisplay = $('<div>').addClass('code-display');
-        let dropZoneCounter = 0;
     
         // Process code template
         const codeLines = question.code_template.split('\n');
@@ -225,13 +240,7 @@ const QuizUI = {
                 codeLine.append($('<span>').addClass('code-block').text(part));
                 
                 if (partIndex < parts.length - 1) {
-                    const dropZone = $('<div>')
-                        .addClass('drop-zone-item coding-drop-zone')
-                        .attr({
-                            'data-question': index,
-                            'data-index': dropZoneCounter++
-                        });
-                    codeLine.append(dropZone);
+                    codeLine.append(createDropZone());
                 }
             });
             
