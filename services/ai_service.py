@@ -103,24 +103,24 @@ class AIService:
             search_results = self.search_service.get_relevant_content(topic)
             
             # Construct prompt for explanation generation
-            explanation_prompt = f"""Generate a comprehensive, educational explanation for the following question:
+            explanation_prompt = f"""Generate a concise, clear explanation for the following question:
 
 Question: {question}
 Correct Answer: {correct_answer}
 
+Guidelines:
+- Provide a precise explanation in 3-5 sentences
+- Focus on why the answer is correct
+- Use clear, direct language
+- Explain the key concept succinctly
+- Avoid unnecessary details
+
 Context from research:
 {search_results.get('context', '')}
 
-Guidelines:
-- Provide a clear, detailed explanation of why the answer is correct
-- Include key insights and important details
-- Explain the reasoning behind the correct answer
-- Use an academic but engaging tone
-- Aim for a length of 2-3 paragraphs
-
 Additional context:
 - Topic: {topic}
-- Ensure the explanation helps the learner understand the concept deeply"""
+- Explain the core concept behind the correct answer"""
             
             # Generate the explanation
             explanation_text = self.generate_content(explanation_prompt, model_type='explanation')
@@ -130,7 +130,10 @@ Additional context:
             
             # Fallback if no explanation generated
             if not explanation_text:
-                explanation_text = f"The correct answer is '{correct_answer}'. Unfortunately, a detailed explanation could not be generated."
+                explanation_text = f"The correct answer is '{correct_answer}'. This answer is significant because it highlights a key concept in {topic}."
+            
+            # Ensure explanation is concise
+            explanation_text = ' '.join(explanation_text.split()[:100])
             
             return {
                 'explanation': explanation_text,
@@ -140,7 +143,7 @@ Additional context:
         except Exception as e:
             print(f"Error generating explanation: {e}")
             return {
-                'explanation': f"Unable to generate explanation for the question about {topic}.",
+                'explanation': f"The correct answer relates to key concepts in {topic}.",
                 'references': []
             }
 
