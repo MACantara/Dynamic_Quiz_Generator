@@ -127,6 +127,13 @@ const QuizUI = {
         return dragItem;
     },
 
+    // Clone a drag item for drop zones
+    cloneDragItem: function(originalItem) {
+        const option = originalItem.attr('data-value');
+        const questionIndex = originalItem.closest('[data-question]').attr('data-question');
+        return this.createDragItem(option, questionIndex, true);
+    },
+
     // Handle remove item click
     handleRemoveItem: function(e) {
         e.stopPropagation();
@@ -328,3 +335,12 @@ const QuizUI = {
         resultsModal.show();
     }
 };
+
+// Update drag and drop event handlers in your initialization code
+// (This might be in quizLogic.js or another file where you handle drag events)
+handleDrop: function(e) {
+    // ...existing drop handling code...
+    const clone = QuizUI.cloneDragItem(draggedItem);
+    dropZone.append(clone);
+    // ...rest of drop handling code...
+}
