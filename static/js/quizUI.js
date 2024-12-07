@@ -297,7 +297,6 @@ const QuizUI = {
 
     // Display quiz results
     displayResults: function(answers) {
-        // Clear any existing results
         $('#quizContainer').addClass('d-none');
         const resultsContent = $('#resultsContent');
         resultsContent.empty();
@@ -314,9 +313,10 @@ const QuizUI = {
                     .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`)
                     .append(
                         $('<strong>').text(`Question ${index + 1}: `),
+                        $('<div>').addClass('question-text mb-2').text(answer.questionText),
                         $('<span>').text(isCorrect ? 'Correct!' : 'Incorrect'),
-                        $('<div>').text(`Your answer: ${answer.userAnswer}`),
-                        $('<div>').text(`Correct answer: ${answer.correctAnswer}`)
+                        $('<div>').text(`Your answer: ${Array.isArray(answer.userAnswer) ? answer.userAnswer.join(', ') : answer.userAnswer}`),
+                        $('<div>').text(`Correct answer: ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}`)
                     )
             );
             
@@ -335,12 +335,3 @@ const QuizUI = {
         resultsModal.show();
     }
 };
-
-// Update drag and drop event handlers in your initialization code
-// (This might be in quizLogic.js or another file where you handle drag events)
-handleDrop: function(e) {
-    // ...existing drop handling code...
-    const clone = QuizUI.cloneDragItem(draggedItem);
-    dropZone.append(clone);
-    // ...rest of drop handling code...
-}
