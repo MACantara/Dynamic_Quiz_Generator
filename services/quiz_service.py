@@ -13,6 +13,11 @@ class QuizService:
         return f"""Generate a quiz about {topic} containing exactly {num_questions} questions.
         Use only the following question types: {', '.join(question_types)}. Ensure that the number of questions matches the specified number ({num_questions}) without exception.
         
+        IMPORTANT INSTRUCTIONS:
+        - DO NOT include any reference links or URLs in the question text, explanations, or options
+        - References are for background research only and should NOT appear in the generated quiz
+        - Explanations should be concise and informative
+        
         For each question, include:
         - A detailed explanation of the correct answer
         - At least one reference link to documentation or reliable sources
