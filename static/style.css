@@ -67,3 +67,22 @@
   margin-left: 10px;
   padding: 2px 6px;
 }
+
+.coding-drop-zone {
+  min-height: 30px;
+  border: 2px dashed #ced4da;
+  border-radius: 4px;
+  display: inline-block;
+  padding: 5px;
+  margin: 0 5px;
+  transition: all 0.2s ease;
+}
+
+.coding-drop-zone.drag-over {
+  border-color: #28a745;
+  background-color: #e9f5e9;
+}
+
+.coding-options-container {
+  margin-top: 10px;
+}
