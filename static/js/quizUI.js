@@ -64,7 +64,7 @@ const QuizUI = {
         
         const shuffledOptions = this.shuffleArray(question.options);
         shuffledOptions.forEach(option => {
-            dragDropItemsContainer.append(this.createDragItem(option, index));
+            dragDropItemsContainer.append(this.createDragItem(option, index, true));
         });
         
         dragDropLeftCol.append(dragDropItemsContainer);
@@ -103,18 +103,19 @@ const QuizUI = {
     },
 
     // Create a draggable item
-    createDragItem: function(option, index, isClone = false) {
+    createDragItem: function(option, index, isOriginal = true) {
         const dragItem = $('<div>')
             .addClass('drag-item mb-2')
             .attr('data-value', option)
-            .attr('data-source', isClone ? 'clone' : 'container')
+            .attr('data-source', isOriginal ? 'container' : 'clone')
             .attr('draggable', 'true');
         
         const itemContent = $('<div>')
             .addClass('d-flex justify-content-between align-items-center')
             .append($('<span>').text(option));
         
-        if (isClone) {
+        // Only add remove button for cloned items
+        if (!isOriginal) {
             const removeButton = $('<button>')
                 .addClass('btn btn-sm btn-outline-danger remove-item')
                 .html('<i class="fas fa-times"></i>')
@@ -195,53 +196,67 @@ const QuizUI = {
 
     // Display coding question
     displayCoding: function(question, index, questionBody) {
-        const codingContainer = $('<div>').addClass('coding-container');
-        let dropZoneCounter = 0;
-
-        // Split code template into lines while preserving indentation
-        const codeLines = question.code_template.split('\n');
+        const codingContainer = $('<div>').addClass('row');
         
+        // Create a closure to maintain dropZoneCounter state
+        const createDropZone = (function() {
+            let dropZoneCounter = 0;
+            return function() {
+                return $('<div>')
+                    .addClass('drop-zone-item coding-drop-zone')
+                    .attr({
+                        'data-question': index,
+                        'data-index': dropZoneCounter++
+                    });
+            };
+        })();
+        
+        // Left column - Code snippets
+        const leftCol = $('<div>').addClass('col-md-4');
+        leftCol.append($('<div>').addClass('drop-zone-label').text('Code Snippets:'));
+        
+        const dragItemsContainer = $('<div>')
+            .addClass('drag-items-container code-snippets')
+            .attr('data-question', index);
+        
+        const shuffledOptions = this.shuffleArray(question.options);
+        shuffledOptions.forEach(option => {
+            dragItemsContainer.append(this.createDragItem(option, index, true));
+        });
+        
+        leftCol.append(dragItemsContainer);
+    
+        // Right column - Code display with drop zones
+        const rightCol = $('<div>').addClass('col-md-8');
+        const codeDisplay = $('<div>').addClass('code-display');
+    
+        // Process code template
+        const codeLines = question.code_template.split('\n');
         codeLines.forEach((line, lineIndex) => {
             const codeLine = $('<div>').addClass('code-line');
             
-            // Calculate leading spaces for indentation
+            // Handle indentation
             const leadingSpaces = line.match(/^\s*/)[0];
             if (leadingSpaces) {
                 codeLine.append($('<span>').addClass('code-indent').text(leadingSpaces));
             }
-
+    
             // Split line by drop zones
             const parts = line.trim().split('_____');
             parts.forEach((part, partIndex) => {
-                // Add code part
                 codeLine.append($('<span>').addClass('code-block').text(part));
                 
-                // Add drop zone if not the last part
                 if (partIndex < parts.length - 1) {
-                    const dropZone = $('<div>')
-                        .addClass('drop-zone-item coding-drop-zone')
-                        .attr({
-                            'data-question': index,
-                            'data-index': dropZoneCounter++
-                        });
-                    codeLine.append(dropZone);
+                    codeLine.append(createDropZone());
                 }
             });
             
-            codingContainer.append(codeLine);
+            codeDisplay.append(codeLine);
         });
-
-        // Create options container with available code snippets
-        const codingOptionsContainer = $('<div>')
-            .addClass('coding-options-container')
-            .attr('data-question', index);
-
-        const shuffledOptions = this.shuffleArray(question.options);
-        shuffledOptions.forEach(option => {
-            codingOptionsContainer.append(this.createDragItem(option, index));
-        });
-
-        questionBody.append(codingContainer, codingOptionsContainer);
+    
+        rightCol.append(codeDisplay);
+        codingContainer.append(leftCol, rightCol);
+        questionBody.append(codingContainer);
     },
 
     // Display quiz questions
