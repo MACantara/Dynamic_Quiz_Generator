@@ -1,3 +1,4 @@
+import json
 import google.generativeai as genai
 from config import Config
 from services.search_service import SearchService
@@ -19,9 +20,15 @@ class AIService:
 
             {search_data['context']}
 
-            Please use these sources to ground your response and include relevant references.
-            Available reference links:
-            {', '.join(search_data['references'])}
+            Please use these sources to ground your response.
+            Available references:
+            {json.dumps(search_data['references'], indent=2)}
+
+            When including references in your response, use the full reference object 
+            with both URL and title. Example format:
+            "references": [
+                {{"url": "https://example.com", "title": "Example Title", "source": "example.com"}}
+            ]
 
             {prompt}
             """
