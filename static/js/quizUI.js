@@ -103,25 +103,34 @@ const QuizUI = {
     },
 
     // Create a draggable item
-    createDragItem: function(option, index) {
+    createDragItem: function(option, index, isClone = false) {
         const dragItem = $('<div>')
             .addClass('drag-item mb-2')
             .attr('data-value', option)
-            .attr('data-source', 'container')
+            .attr('data-source', isClone ? 'clone' : 'container')
             .attr('draggable', 'true');
         
         const itemContent = $('<div>')
             .addClass('d-flex justify-content-between align-items-center')
             .append($('<span>').text(option));
         
-        const removeButton = $('<button>')
-            .addClass('btn btn-sm btn-outline-danger remove-item')
-            .html('<i class="fas fa-times"></i>')
-            .on('click', this.handleRemoveItem);
+        if (isClone) {
+            const removeButton = $('<button>')
+                .addClass('btn btn-sm btn-outline-danger remove-item')
+                .html('<i class="fas fa-times"></i>')
+                .on('click', this.handleRemoveItem);
+            itemContent.append(removeButton);
+        }
         
-        itemContent.append(removeButton);
         dragItem.append(itemContent);
         return dragItem;
+    },
+
+    // Clone a drag item for drop zones
+    cloneDragItem: function(originalItem) {
+        const option = originalItem.attr('data-value');
+        const questionIndex = originalItem.closest('[data-question]').attr('data-question');
+        return this.createDragItem(option, questionIndex, true);
     },
 
     // Handle remove item click
@@ -311,3 +320,12 @@ const QuizUI = {
         resultsModal.show();
     }
 };
+
+// Update drag and drop event handlers in your initialization code
+// (This might be in quizLogic.js or another file where you handle drag events)
+handleDrop: function(e) {
+    // ...existing drop handling code...
+    const clone = QuizUI.cloneDragItem(draggedItem);
+    dropZone.append(clone);
+    // ...rest of drop handling code...
+}

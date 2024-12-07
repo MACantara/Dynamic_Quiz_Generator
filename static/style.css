@@ -23,6 +23,20 @@
   z-index: 1000;
 }
 
+.drag-item[data-source="container"] {
+    cursor: grab;
+    background-color: #f8f9fa;
+}
+
+.drag-item[data-source="clone"] {
+    cursor: move;
+    background-color: #e9ecef;
+}
+
+.drag-item[data-source="container"] .remove-item {
+    display: none;
+}
+
 .drop-zone-item,
 .ordering-zone {
   min-height: 50px;
