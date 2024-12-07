@@ -77,6 +77,14 @@ const QuizLogic = {
                             });
                         }
                         break;
+
+                    case 'coding':
+                        userAnswer = [];
+                        $(`.coding-drop-zone[data-question="${index}"]`).each(function() {
+                            const dragItem = $(this).find('.drag-item');
+                            userAnswer.push(dragItem.length ? dragItem.attr('data-value') : null);
+                        });
+                        break;
                 }
 
                 console.log(`Question ${index + 1} Answers:`, {

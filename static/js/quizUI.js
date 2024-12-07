@@ -184,6 +184,34 @@ const QuizUI = {
         questionBody.append(tfOptions);
     },
 
+    // Display coding question
+    displayCoding: function(question, index, questionBody) {
+        const codingContainer = $('<div>').addClass('coding-container');
+        const parts = question.code_template.split('_____');
+        
+        parts.forEach((part, i) => {
+            codingContainer.append($('<pre>').text(part));
+            if (i < parts.length - 1) {
+                const dropZone = $('<div>')
+                    .addClass('drop-zone-item coding-drop-zone')
+                    .attr('data-question', index)
+                    .attr('data-index', i);
+                codingContainer.append(dropZone);
+            }
+        });
+
+        const codingOptionsContainer = $('<div>')
+            .addClass('coding-options-container')
+            .attr('data-question', index);
+
+        const shuffledOptions = this.shuffleArray(question.options);
+        shuffledOptions.forEach(option => {
+            codingOptionsContainer.append(this.createDragItem(option, index));
+        });
+
+        questionBody.append(codingContainer, codingOptionsContainer);
+    },
+
     // Display quiz questions
     displayQuiz: function(quiz) {
         const questionsContainer = $('#questions');
@@ -209,6 +237,9 @@ const QuizUI = {
                     break;
                 case 'true_false':
                     this.displayTrueFalse(question, index, questionBody);
+                    break;
+                case 'coding':
+                    this.displayCoding(question, index, questionBody);
                     break;
             }
 
