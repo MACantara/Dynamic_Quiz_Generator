@@ -106,30 +106,63 @@ const QuizLogic = {
     displayResultsModal: function(results) {
         const modalContent = `
             <div class="quiz-results-container">
-                <h2>Quiz Results</h2>
-                <div class="score-summary">
-                    <p>Total Questions: ${results.totalQuestions}</p>
-                    <p>Correct Answers: ${results.correctAnswers}</p>
-                    <p>Score: ${results.score}%</p>
+                <h2 class="text-center mb-4">Quiz Results</h2>
+                <div class="score-summary card mb-4">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h5>Total Questions</h5>
+                                <span class="badge bg-secondary">${results.totalQuestions}</span>
+                            </div>
+                            <div class="col-4">
+                                <h5>Correct Answers</h5>
+                                <span class="badge bg-success">${results.correctAnswers}</span>
+                            </div>
+                            <div class="col-4">
+                                <h5>Score</h5>
+                                <span class="badge ${results.score >= 70 ? 'bg-success' : results.score >= 50 ? 'bg-warning' : 'bg-danger'}">${results.score}%</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="detailed-results">
                     ${results.details.map((detail, index) => `
-                        <div class="result-item ${detail.isCorrect ? 'correct' : 'incorrect'}">
-                            <h3>Question ${index + 1}</h3>
-                            <p><strong>Question:</strong> ${detail.questionText}</p>
-                            <p><strong>Your Answer:</strong> ${detail.userAnswer}</p>
-                            <p><strong>Correct Answer:</strong> ${detail.correctAnswer}</p>
-                            <div class="explanation">
-                                <h4>Explanation:</h4>
-                                <p>${detail.explanation}</p>
+                        <div class="card mb-3 ${detail.isCorrect ? 'border-success' : 'border-danger'}">
+                            <div class="card-header d-flex justify-content-between align-items-center ${detail.isCorrect ? 'bg-success-subtle' : 'bg-danger-subtle'}">
+                                <h5 class="mb-0">Question ${index + 1}</h5>
+                                <span class="badge ${detail.isCorrect ? 'bg-success' : 'bg-danger'}">
+                                    ${detail.isCorrect ? 'Correct' : 'Incorrect'}
+                                </span>
+                            </div>
+                            <div class="card-body">
+                                <div class="question-section mb-3">
+                                    <h6 class="card-title">Question</h6>
+                                    <p class="card-text">${detail.questionText}</p>
+                                </div>
+                                <div class="answer-section mb-3">
+                                    <h6 class="card-title">Your Answer</h6>
+                                    <p class="card-text ${detail.isCorrect ? 'text-success' : 'text-danger'}">
+                                        ${detail.userAnswer}
+                                    </p>
+                                </div>
+                                <div class="correct-answer-section mb-3">
+                                    <h6 class="card-title">Correct Answer</h6>
+                                    <p class="card-text text-success">
+                                        ${detail.correctAnswer}
+                                    </p>
+                                </div>
+                                <div class="explanation-section mb-3">
+                                    <h6 class="card-title">Explanation</h6>
+                                    <p class="card-text">${detail.explanation}</p>
+                                </div>
                                 ${detail.references.length > 0 ? `
-                                    <div class="references">
-                                        <h5>References:</h5>
-                                        <ul>
+                                    <div class="references-section">
+                                        <h6 class="card-title">References</h6>
+                                        <ul class="list-group">
                                             ${detail.references.map(ref => `
-                                                <li>
-                                                    <a href="${ref.url}" target="_blank">${ref.title}</a>
-                                                    <small>(${ref.source})</small>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <a href="${ref.url}" target="_blank" class="text-primary">${ref.title}</a>
+                                                    <span class="badge bg-info">${ref.source}</span>
                                                 </li>
                                             `).join('')}
                                         </ul>
@@ -146,7 +179,7 @@ const QuizLogic = {
         const modal = document.createElement('div');
         modal.className = 'modal fade show';
         modal.innerHTML = `
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-body">
                         ${modalContent}
