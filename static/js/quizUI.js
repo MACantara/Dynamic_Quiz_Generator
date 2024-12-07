@@ -442,24 +442,48 @@ const QuizUI = {
             referencesList.append($('<div>').addClass('explanation-title').text('Learn more:'));
             
             const linksList = $('<ul>').addClass('references-list');
-            answer.references.forEach((ref, index) => {
-                linksList.append(
-                    $('<li>').append(
-                        $('<a>')
-                            .attr({
-                                href: ref,
-                                target: '_blank',
-                                rel: 'noopener noreferrer'
-                            })
-                            .text(`Reference ${index + 1}`)
-                    )
-                );
+            answer.references.forEach(ref => {
+                if (this.isValidUrl(ref.url)) {
+                    const sourceName = this.getSourceName(ref.url);
+                    linksList.append(
+                        $('<li>').append(
+                            $('<a>')
+                                .attr({
+                                    href: ref.url,
+                                    target: '_blank',
+                                    rel: 'noopener noreferrer'
+                                })
+                                .html(`${ref.title || 'Reference'} <small>(${sourceName})</small>`)
+                        )
+                    );
+                }
             });
-            referencesList.append(linksList);
-            explanationBlock.append(referencesList);
+            
+            if (linksList.children().length > 0) {
+                referencesList.append(linksList);
+                explanationBlock.append(referencesList);
+            }
         }
 
         return explanationBlock;
+    },
+
+    isValidUrl: function(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
+    },
+
+    getSourceName: function(url) {
+        try {
+            const hostname = new URL(url).hostname;
+            return hostname.replace(/^www\./, '');
+        } catch {
+            return 'source';
+        }
     },
 
     displayScoreSummary: function(correctCount, total) {
