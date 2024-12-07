@@ -4,6 +4,7 @@ from services.ai_service import AIService
 class QuizService:
     def __init__(self):
         self.ai_service = AIService()
+        self.MAX_QUESTIONS = 20
 
     def _create_prompt(self, topic, num_questions, question_types):
         return f"""Generate a quiz about {topic} with {num_questions} questions.
@@ -78,6 +79,8 @@ class QuizService:
 
     def generate_quiz(self, topic, num_questions, question_types):
         try:
+            # Ensure num_questions is within limits
+            num_questions = min(max(num_questions, 1), self.MAX_QUESTIONS)
             prompt = self._create_prompt(topic, num_questions, question_types)
             response = self.ai_service.generate_content(prompt)
             cleaned_text = self._clean_response(response.text)

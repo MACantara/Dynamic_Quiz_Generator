@@ -19,7 +19,7 @@ def index():
 def generate():
     data = request.get_json()
     topic = data.get('topic')
-    num_questions = int(data.get('num_questions', 5))
+    num_questions = min(max(int(data.get('num_questions', 5)), 1), 20)  # Limit between 1 and 20
     question_types = data.get('question_types', ['multiple_choice', 'drag_drop', 'fill_blank', 'true_false', 'coding'])
     
     quiz = quiz_service.generate_quiz(topic, num_questions, question_types)
