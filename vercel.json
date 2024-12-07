@@ -15,5 +15,11 @@
     "env": {
         "GOOGLE_SEARCH_API_KEY": "AIzaSyDCgTusHsI-bw81HagZl0-6uNe7VTCZZBg",
         "GOOGLE_SEARCH_ENGINE_ID": "c10d2fc4f8ba442c9"
+    },
+    "functions": {
+        "app.py": {
+            "memory": 1024,
+            "maxDuration": 30
+        }
     }
 }
