@@ -13,7 +13,15 @@ class SearchService:
         """
         Perform a Google Custom Search and return relevant results
         """
+        if not query or not self.cx or not Config.GOOGLE_SEARCH_API_KEY:
+            print("Missing required search parameters")
+            return []
+
         try:
+            # Sanitize and validate query
+            query = query.strip()
+            num_results = min(max(1, num_results), 10)  # Limit between 1 and 10
+
             result = self.service.cse().list(
                 q=query,
                 cx=self.cx,
@@ -31,7 +39,7 @@ class SearchService:
                     })
             return search_results
         except Exception as e:
-            print(f"Search error: {e}")
+            print(f"Search error: {str(e)}")
             return []
 
     def get_relevant_content(self, topic, subtopic=None):
