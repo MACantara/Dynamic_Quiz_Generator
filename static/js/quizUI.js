@@ -111,8 +111,17 @@ const QuizUI = {
             .attr('draggable', 'true');
         
         const itemContent = $('<div>')
-            .addClass('d-flex justify-content-between align-items-center')
-            .append($('<span>').text(option));
+            .addClass('d-flex justify-content-between align-items-center');
+
+        // Add drag handle
+        const dragHandle = $('<div>')
+            .addClass('drag-handle me-2')
+            .html('<i class="fas fa-grip-vertical"></i>');
+        
+        itemContent.append(
+            dragHandle,
+            $('<span>').addClass('flex-grow-1').text(option)
+        );
         
         // Only add remove button for cloned items
         if (!isOriginal) {
