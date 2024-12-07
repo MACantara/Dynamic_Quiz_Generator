@@ -84,5 +84,70 @@
 }
 
 .coding-options-container {
-  margin-top: 10px;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.coding-options-container .drag-item {
+  display: inline-block;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+/* Code Question Styles */
+.code-block {
+    font-family: monospace;
+    white-space: pre;
+    display: inline;
+    line-height: 1.5;
+}
+
+.code-line {
+    display: block;
+    white-space: pre;
+}
+
+.code-indent {
+    display: inline-block;
+    width: 2em;
+}
+
+.coding-container {
+    font-family: monospace;
+    background-color: #f8f9fa;
+    padding: 1em;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    margin-bottom: 1em;
+    overflow-x: auto;
+}
+
+.coding-drop-zone {
+    display: inline-flex;
+    min-width: 150px;
+    min-height: 1.5em;
+    margin: 0 0.25em;
+    padding: 0 0.5em;
+    vertical-align: middle;
+    background-color: rgba(0,123,255,0.1);
+    border: 2px dashed #007bff;
+}
+
+.coding-drop-zone.drag-over {
+    background-color: rgba(40,167,69,0.1);
+    border-color: #28a745;
+}
+
+.coding-drop-zone .drag-item {
+    margin: 0;
+    padding: 0 0.5em;
+    font-family: monospace;
+    background-color: #fff;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
 }
