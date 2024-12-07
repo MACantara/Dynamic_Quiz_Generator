@@ -51,7 +51,64 @@ const QuizLogic = {
             if (!this.currentQuiz) return;
 
             const timeSpent = QuizUI.timeLimit - QuizUI.timeRemaining;
+
             const answers = this.gatherAnswers();
+
+            this.currentQuiz.questions.forEach((question, index) => {
+                console.log(`Processing Question ${index + 1}:`, question);
+
+                let userAnswer;
+                let correctAnswer = question.correct_answer;
+
+                switch (question.type) {
+                    case 'multiple_choice':
+                    case 'fill_blank':
+                    case 'true_false':
+                        userAnswer = $(`[name="q${index}"]:checked`).val() || $(`select[name="q${index}"]`).val();
+                        break;
+
+                    case 'drag_drop':
+                        if (question.descriptions) {
+                            // Matching type question
+                            userAnswer = [];
+                            $(`.drop-zone-item[data-question="${index}"]`).each(function() {
+                                const dragItem = $(this).find('.drag-item');
+                                userAnswer.push(dragItem.length ? dragItem.attr('data-value') : null);
+                            });
+                        } else {
+                            // Ordering type question
+                            userAnswer = [];
+                            $(`.ordering-zone[data-question="${index}"] .drag-item`).each(function() {
+                                userAnswer.push($(this).attr('data-value'));
+                            });
+                        }
+                        break;
+
+                    case 'coding':
+                        userAnswer = [];
+                        $(`.coding-drop-zone[data-question="${index}"]`).each(function() {
+                            const dragItem = $(this).find('.drag-item');
+                            userAnswer.push(dragItem.length ? dragItem.attr('data-value') : null);
+                        });
+                        break;
+                }
+
+                console.log(`Question ${index + 1} Answers:`, {
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer
+                });
+
+                answers.push({
+                    questionText: question.question,
+                    userAnswer: userAnswer,
+                    correctAnswer: correctAnswer,
+                    isCorrect: this.compareAnswers(userAnswer, correctAnswer),
+                    type: question.type,
+                    explanation: question.explanation,
+                    references: question.references
+                });
+            });
+
             QuizUI.displayResults(answers);
             
             console.log(`Time spent: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s`);
