@@ -2,9 +2,11 @@ from flask import Blueprint, render_template, request, jsonify, current_app
 from werkzeug.exceptions import GatewayTimeout
 import time
 from services.quiz_service import QuizService
+from services.ai_service import AIService
 
 quiz_bp = Blueprint('quiz', __name__)
 quiz_service = QuizService()
+ai_service = AIService()
 
 @quiz_bp.route('/')
 def index():
@@ -34,8 +36,11 @@ def generate():
         if time.time() - start_time > timeout:
             raise GatewayTimeout("Quiz generation timed out")
 
+        # Generate explanations for the quiz
+        explained_quiz = ai_service.generate_quiz_explanations(quiz, topic)
+        
         return jsonify({
-            'quiz': quiz,
+            'quiz': explained_quiz,
             'status': 'success'
         })
 

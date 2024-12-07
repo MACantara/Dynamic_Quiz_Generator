@@ -58,9 +58,113 @@ const QuizLogic = {
             // Use gatherAnswers to collect all answers
             const answers = this.gatherAnswers();
 
-            QuizUI.displayResults(answers);
+            this.submitQuiz(answers);
             
             console.log(`Time spent: ${Math.floor(timeSpent / 60)}m ${timeSpent % 60}s`);
+        });
+    },
+
+    submitQuiz: function(answers) {
+        const quizData = this.currentQuiz;
+        
+        // Validate answers
+        if (answers.length !== quizData.questions.length) {
+            this.showErrorMessage("Please answer all questions before submitting.");
+            return;
+        }
+
+        // Calculate score
+        let correctCount = 0;
+        const resultsDetails = answers.map((answer, index) => {
+            const question = quizData.questions[index];
+            const isCorrect = this.compareAnswers(answer.userAnswer, question.correct_answer);
+            
+            if (isCorrect) correctCount++;
+            
+            return {
+                questionText: question.question,
+                userAnswer: answer.userAnswer,
+                correctAnswer: question.correct_answer,
+                isCorrect: isCorrect,
+                explanation: question.explanation || "No explanation available.",
+                references: question.references || []
+            };
+        });
+
+        // Prepare results
+        const results = {
+            totalQuestions: quizData.questions.length,
+            correctAnswers: correctCount,
+            score: Math.round((correctCount / quizData.questions.length) * 100),
+            details: resultsDetails
+        };
+
+        // Display results modal
+        this.displayResultsModal(results);
+    },
+
+    displayResultsModal: function(results) {
+        const modalContent = `
+            <div class="quiz-results-container">
+                <h2>Quiz Results</h2>
+                <div class="score-summary">
+                    <p>Total Questions: ${results.totalQuestions}</p>
+                    <p>Correct Answers: ${results.correctAnswers}</p>
+                    <p>Score: ${results.score}%</p>
+                </div>
+                <div class="detailed-results">
+                    ${results.details.map((detail, index) => `
+                        <div class="result-item ${detail.isCorrect ? 'correct' : 'incorrect'}">
+                            <h3>Question ${index + 1}</h3>
+                            <p><strong>Question:</strong> ${detail.questionText}</p>
+                            <p><strong>Your Answer:</strong> ${detail.userAnswer}</p>
+                            <p><strong>Correct Answer:</strong> ${detail.correctAnswer}</p>
+                            <div class="explanation">
+                                <h4>Explanation:</h4>
+                                <p>${detail.explanation}</p>
+                                ${detail.references.length > 0 ? `
+                                    <div class="references">
+                                        <h5>References:</h5>
+                                        <ul>
+                                            ${detail.references.map(ref => `
+                                                <li>
+                                                    <a href="${ref.url}" target="_blank">${ref.title}</a>
+                                                    <small>(${ref.source})</small>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        // Create and show modal
+        const modal = document.createElement('div');
+        modal.className = 'modal fade show';
+        modal.innerHTML = `
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        ${modalContent}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Add modal to body and show
+        document.body.appendChild(modal);
+        $(modal).modal('show');
+
+        // Remove modal when closed
+        $(modal).on('hidden.bs.modal', function () {
+            document.body.removeChild(modal);
         });
     },
 
