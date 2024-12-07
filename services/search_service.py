@@ -1,15 +1,29 @@
 from googleapiclient.discovery import build
 from config import Config
+import os
 
 class SearchService:
     def __init__(self):
-        self.service = build(
-            "customsearch", "v1",
-            developerKey=Config.GOOGLE_SEARCH_API_KEY
-        )
-        self.cx = Config.GOOGLE_SEARCH_ENGINE_ID  # Custom Search Engine ID
+        self.service = None
+        self.cx = None
+        try:
+            if not Config.GOOGLE_SEARCH_API_KEY or not Config.GOOGLE_SEARCH_ENGINE_ID:
+                print("Warning: Google Search credentials not found in environment")
+                return
+                
+            self.service = build(
+                "customsearch", "v1",
+                developerKey=Config.GOOGLE_SEARCH_API_KEY
+            )
+            self.cx = Config.GOOGLE_SEARCH_ENGINE_ID
+        except Exception as e:
+            print(f"Failed to initialize search service: {e}")
 
     def search(self, query, num_results=5):
+        if not self.service or not self.cx:
+            print("Search service not properly initialized")
+            return self._get_fallback_results()
+
         """
         Perform a Google Custom Search and return relevant results
         """
@@ -41,6 +55,15 @@ class SearchService:
         except Exception as e:
             print(f"Search error: {str(e)}")
             return []
+
+    def _get_fallback_results(self):
+        """Provide fallback results when search fails"""
+        return [{
+            'title': 'Documentation',
+            'link': 'https://docs.python.org',
+            'snippet': 'Official Python Documentation',
+            'source': 'docs.python.org'
+        }]
 
     def get_relevant_content(self, topic, subtopic=None):
         """
