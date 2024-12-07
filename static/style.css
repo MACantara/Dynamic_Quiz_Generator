@@ -134,11 +134,10 @@
 .coding-drop-zone {
     display: inline-flex;
     min-width: 120px;
-    height: 24px;
+    min-height: 24px;
     margin: 0 4px;
-    padding: 0 8px;
     vertical-align: middle;
-    background-color: rgba(0,123,255,0.1);
+    background-color: rgba(0,123,255,0.05);
     border: 2px dashed #007bff;
 }
 
@@ -150,10 +149,9 @@
 .coding-drop-zone .drag-item {
     margin: 0;
     padding: 2px 8px;
+    width: 100%;
     font-family: monospace;
     font-size: 0.9em;
-    line-height: 20px;
-    height: auto;
     background-color: #fff;
 }
 
@@ -165,6 +163,7 @@
     border: 1px solid #dee2e6;
     margin-bottom: 1em;
     overflow-x: auto;
+    position: relative;
 }
 
 .drag-items-container.code-snippets {
@@ -175,4 +174,21 @@
     background-color: #fff;
     border: 1px solid #dee2e6;
     border-radius: 4px;
+}
+
+.code-snippets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    padding: 1em;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    min-height: 200px;
+}
+
+.code-snippets .drag-item {
+    margin-bottom: 4px;
+    font-family: monospace;
+    font-size: 0.9em;
 }
