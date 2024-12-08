@@ -402,12 +402,15 @@ const QuizUI = {
                     .append(
                         $('<h5>').addClass('card-title mb-0').text(`Question ${index + 1}`),
                         badge
-                    ),
-                $('<p>').addClass('card-text mb-3').text(answer.questionText)
+                    )
             );
 
-            // Display answer options and results
+            // Question text
+            questionBody.append($('<p>').addClass('card-text mb-3').text(answer.questionText));
+
+            // Display answer options based on question type
             this.displayResultAnswers(answer, questionBody);
+
             questionDiv.append(questionBody);
             questionsContainer.append(questionDiv);
         });
@@ -442,6 +445,46 @@ const QuizUI = {
             case 'coding':
                 this.displayCodingResult(answer, answersSection);
                 break;
+        }
+        
+        // Add explanation immediately after answers
+        if (answer.explanation) {
+            answersSection.append(
+                $('<div>')
+                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
+                    .append(
+                        $('<h6>').addClass('mb-2').text('Explanation:'),
+                        $('<p>').addClass('mb-0').text(answer.explanation)
+                    )
+            );
+        }
+
+        // Add references if available
+        if (answer.references && answer.references.length > 0) {
+            const refsContainer = $('<div>')
+                .addClass('references-section mt-3')
+                .append($('<h6>').addClass('mb-2').text('Learn More:'));
+
+            const refsList = $('<ul>').addClass('list-unstyled mb-0');
+            answer.references.forEach(ref => {
+                if (this.isValidUrl(ref.url)) {
+                    refsList.append(
+                        $('<li>').append(
+                            $('<a>')
+                                .attr({
+                                    href: ref.url,
+                                    target: '_blank',
+                                    rel: 'noopener noreferrer'
+                                })
+                                .addClass('text-decoration-none')
+                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
+                        )
+                    );
+                }
+            });
+            
+            refsContainer.append(refsList);
+            container.append(refsContainer);
         }
         
         container.append(answersSection);
@@ -565,187 +608,6 @@ const QuizUI = {
         );
     },
 
-    // Display quiz results
-    displayResults: function(answers) {
-        this.stopTimer();
-        const questionsContainer = $('#questions');
-        questionsContainer.empty();
-        
-        // Add score summary at the top
-        const correctCount = answers.filter(a => a.isCorrect).length;
-        const score = Math.round((correctCount / answers.length) * 100);
-        questionsContainer.prepend(
-            $('<div>')
-                .addClass('alert alert-info mb-4')
-                .html(`
-                    <h4 class="alert-heading">Quiz Results</h4>
-                    <p class="mb-0">
-                        <span class="h2">${score}%</span><br>
-                        <span class="text-muted">${correctCount} out of ${answers.length} correct</span>
-                    </p>
-                `)
-        );
-
-        // Display each question with results
-        answers.forEach((answer, index) => {
-            const questionDiv = $('<div>').addClass('card mb-3');
-            const questionBody = $('<div>').addClass('card-body');
-            
-            // Question header with badge
-            const badge = $('<span>')
-                .addClass(`badge ${answer.isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
-                .text(answer.isCorrect ? 'Correct' : 'Incorrect');
-            
-            questionBody.append(
-                $('<div>')
-                    .addClass('d-flex justify-content-between align-items-center mb-3')
-                    .append(
-                        $('<h5>').addClass('card-title mb-0').text(`Question ${index + 1}`),
-                        badge
-                    )
-            );
-
-            // Question text
-            questionBody.append($('<p>').addClass('card-text mb-3').text(answer.questionText));
-
-            // Display answer options based on question type
-            this.displayResultAnswers(answer, questionBody);
-
-            // Add explanation in a collapsible section
-            if (answer.explanation || (answer.references && answer.references.length)) {
-                const explanationId = `explanation-${index}`;
-                questionBody.append(
-                    $('<div>').addClass('mt-3').append(
-                        $('<button>')
-                            .addClass('btn btn-outline-secondary btn-sm w-100')
-                            .attr({
-                                'type': 'button',
-                                'data-bs-toggle': 'collapse',
-                                'data-bs-target': `#${explanationId}`,
-                                'aria-expanded': 'false'
-                            })
-                            .text('Show Explanation'),
-                        $('<div>')
-                            .addClass('collapse mt-3')
-                            .attr('id', explanationId)
-                            .append(this.createExplanationBlock(answer))
-                    )
-                );
-            }
-
-            questionDiv.append(questionBody);
-            questionsContainer.append(questionDiv);
-        });
-
-        // Add restart button
-        questionsContainer.append(
-            $('<button>')
-                .addClass('btn btn-primary mt-3')
-                .text('Start New Quiz')
-                .on('click', () => {
-                    $('#quizForm').trigger('reset');
-                    $('#quizContainer').addClass('d-none');
-                })
-        );
-    },
-
-    displayResultAnswers: function(answer, container) {
-        const answerBlock = $('<div>').addClass('answer-options');
-        
-        switch (answer.type) {
-            case 'multiple_choice':
-            case 'true_false':
-                this.displayMCResult(answer, answerBlock);
-                break;
-            case 'fill_blank':
-                this.displayFillBlankResult(answer, answerBlock);
-                break;
-            case 'drag_drop':
-                this.displayDragDropResult(answer, answerBlock);
-                break;
-            case 'coding':
-                this.displayCodingResult(answer, answerBlock);
-                break;
-        }
-        
-        container.append(answerBlock);
-    },
-
-    displayMCResult: function(answer, container) {
-        const options = answer.type === 'true_false' ? ['True', 'False'] : answer.options;
-        
-        options.forEach(option => {
-            const isUserAnswer = String(answer.userAnswer).toLowerCase() === String(option).toLowerCase();
-            const isCorrectAnswer = String(answer.correctAnswer).toLowerCase() === String(option).toLowerCase();
-            
-            const optionDiv = $('<div>')
-                .addClass('form-check mb-2 p-2 rounded')
-                .toggleClass('bg-success bg-opacity-10', isCorrectAnswer)
-                .toggleClass('border border-2', isUserAnswer)
-                .toggleClass('border-success', isUserAnswer && isCorrectAnswer)
-                .toggleClass('border-danger', isUserAnswer && !isCorrectAnswer);
-            
-            optionDiv.append(
-                $('<div>').addClass('d-flex align-items-center').append(
-                    $('<input>')
-                        .addClass('form-check-input me-2')
-                        .attr({
-                            type: 'radio',
-                            disabled: true,
-                            checked: isUserAnswer
-                        }),
-                    $('<label>')
-                        .addClass('form-check-label flex-grow-1')
-                        .text(option),
-                    isUserAnswer && $('<i>')
-                        .addClass(`fas fa-${isCorrectAnswer ? 'check text-success' : 'times text-danger'} ms-2`)
-                )
-            );
-            
-            container.append(optionDiv);
-        });
-
-        // Add explanation immediately after the options
-        if (answer.explanation) {
-            container.append(
-                $('<div>')
-                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
-                    .append(
-                        $('<h6>').addClass('mb-2').text('Explanation:'),
-                        $('<p>').addClass('mb-0').text(answer.explanation)
-                    )
-            );
-        }
-
-        // Add references if available
-        if (answer.references && answer.references.length > 0) {
-            const refsContainer = $('<div>')
-                .addClass('references-section mt-3')
-                .append($('<h6>').addClass('mb-2').text('Learn More:'));
-
-            const refsList = $('<ul>').addClass('list-unstyled mb-0');
-            answer.references.forEach(ref => {
-                if (this.isValidUrl(ref.url)) {
-                    refsList.append(
-                        $('<li>').append(
-                            $('<a>')
-                                .attr({
-                                    href: ref.url,
-                                    target: '_blank',
-                                    rel: 'noopener noreferrer'
-                                })
-                                .addClass('text-decoration-none')
-                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
-                        )
-                    );
-                }
-            });
-            
-            refsContainer.append(refsList);
-            container.append(refsContainer);
-        }
-    },
-
     createAnswerHeader: function(index, badge) {
         return $('<div>')
             .addClass('d-flex align-items-center mb-2')
@@ -767,51 +629,6 @@ const QuizUI = {
                 ${Array.isArray(answer.correctAnswer) ? answer.correctAnswer.join(', ') : answer.correctAnswer}
             `)
         );
-    },
-
-    createExplanationBlock: function(answer) {
-        if (!answer.explanation && (!answer.references || !answer.references.length)) {
-            return '';
-        }
-
-        const explanationBlock = $('<div>').addClass('explanation-block mt-3');
-
-        if (answer.explanation) {
-            explanationBlock.append(
-                $('<div>').addClass('explanation-title').text('Explanation:'),
-                $('<div>').addClass('explanation-text').text(answer.explanation)
-            );
-        }
-
-        if (answer.references && answer.references.length > 0) {
-            const referencesList = $('<div>').addClass('mt-2');
-            referencesList.append($('<div>').addClass('explanation-title').text('Learn more:'));
-            
-            const linksList = $('<ul>').addClass('references-list');
-            answer.references.forEach(ref => {
-                if (this.isValidUrl(ref.url)) {
-                    const sourceName = this.getSourceName(ref.url);
-                    linksList.append(
-                        $('<li>').append(
-                            $('<a>')
-                                .attr({
-                                    href: ref.url,
-                                    target: '_blank',
-                                    rel: 'noopener noreferrer'
-                                })
-                                .html(`${ref.title || 'Reference'} <small>(${sourceName})</small>`)
-                        )
-                    );
-                }
-            });
-            
-            if (linksList.children().length > 0) {
-                referencesList.append(linksList);
-                explanationBlock.append(referencesList);
-            }
-        }
-
-        return explanationBlock;
     },
 
     isValidUrl: function(url) {
