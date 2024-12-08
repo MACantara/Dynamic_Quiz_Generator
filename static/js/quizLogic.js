@@ -84,7 +84,10 @@ const QuizLogic = {
                 correctAnswer: question.correct_answer,
                 isCorrect: isCorrect,
                 explanation: question.explanation || "No explanation available.",
-                references: question.references || []
+                references: question.references || [],
+                type: question.type,
+                options: question.options || [], // Include options for MC questions
+                descriptions: question.descriptions || [] // Include descriptions for drag-drop
             };
         });
 

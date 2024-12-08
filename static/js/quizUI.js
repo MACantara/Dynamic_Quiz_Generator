@@ -371,42 +371,48 @@ const QuizUI = {
         const questionsContainer = $('#questions');
         questionsContainer.empty();
         
-        let correctCount = 0;
-        answers.forEach((answer, index) => {
-            const resultDiv = $('<div>').addClass('mb-4');
-            const isCorrect = answer.isCorrect;
-            
-            if (isCorrect) correctCount++;
-            
-            const badge = $('<span>')
-                .addClass(`badge ${isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
-                .text(isCorrect ? 'Correct' : 'Incorrect');
-            
-            const answerBlock = $('<div>')
-                .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`);
-
-            answerBlock.append(
-                this.createAnswerHeader(index, badge),
-                this.createAnswerDetails(answer),
-                this.createExplanationBlock(answer)
-            );
-            
-            resultDiv.append(answerBlock);
-            questionsContainer.append(resultDiv);
-        });
-
         // Add score summary at the top
+        const correctCount = answers.filter(a => a.isCorrect).length;
         const score = Math.round((correctCount / answers.length) * 100);
         questionsContainer.prepend(
             $('<div>')
                 .addClass('alert alert-info mb-4')
                 .html(`
-                    <strong>Your Score: ${score}%</strong> 
-                    (${correctCount} out of ${answers.length} correct)
+                    <h4 class="alert-heading">Quiz Results</h4>
+                    <p class="mb-0">
+                        <span class="h2">${score}%</span><br>
+                        <span class="text-muted">${correctCount} out of ${answers.length} correct</span>
+                    </p>
                 `)
         );
 
-        // Add a restart button
+        // Display each question with results
+        answers.forEach((answer, index) => {
+            const questionDiv = $('<div>').addClass('card mb-3');
+            const questionBody = $('<div>').addClass('card-body');
+            
+            // Question header with badge
+            const badge = $('<span>')
+                .addClass(`badge ${answer.isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
+                .text(answer.isCorrect ? 'Correct' : 'Incorrect');
+            
+            questionBody.append(
+                $('<div>')
+                    .addClass('d-flex justify-content-between align-items-center mb-3')
+                    .append(
+                        $('<h5>').addClass('card-title mb-0').text(`Question ${index + 1}`),
+                        badge
+                    ),
+                $('<p>').addClass('card-text mb-3').text(answer.questionText)
+            );
+
+            // Display answer options and results
+            this.displayResultAnswers(answer, questionBody);
+            questionDiv.append(questionBody);
+            questionsContainer.append(questionDiv);
+        });
+
+        // Add restart button
         questionsContainer.append(
             $('<button>')
                 .addClass('btn btn-primary mt-3')
@@ -416,6 +422,328 @@ const QuizUI = {
                     $('#quizContainer').addClass('d-none');
                 })
         );
+    },
+
+    displayResultAnswers: function(answer, container) {
+        const answersSection = $('<div>').addClass('answers-section mb-4');
+        
+        // Display based on question type
+        switch (answer.type) {
+            case 'multiple_choice':
+            case 'true_false':
+                this.displayMCResult(answer, answersSection);
+                break;
+            case 'fill_blank':
+                this.displayFillBlankResult(answer, answersSection);
+                break;
+            case 'drag_drop':
+                this.displayDragDropResult(answer, answersSection);
+                break;
+            case 'coding':
+                this.displayCodingResult(answer, answersSection);
+                break;
+        }
+        
+        container.append(answersSection);
+    },
+
+    displayMCResult: function(answer, container) {
+        const options = answer.type === 'true_false' ? ['True', 'False'] : answer.options;
+        
+        options.forEach(option => {
+            const isUserAnswer = String(answer.userAnswer).toLowerCase() === String(option).toLowerCase();
+            const isCorrectAnswer = String(answer.correctAnswer).toLowerCase() === String(option).toLowerCase();
+            
+            const optionDiv = $('<div>')
+                .addClass('form-check mb-2 p-2 rounded')
+                .toggleClass('bg-success bg-opacity-10', isCorrectAnswer)
+                .toggleClass('border border-2', isUserAnswer)
+                .toggleClass('border-success', isUserAnswer && isCorrectAnswer)
+                .toggleClass('border-danger', isUserAnswer && !isCorrectAnswer);
+            
+            optionDiv.append(
+                $('<div>').addClass('d-flex align-items-center').append(
+                    $('<input>')
+                        .addClass('form-check-input me-2')
+                        .attr({
+                            type: 'radio',
+                            disabled: true,
+                            checked: isUserAnswer
+                        }),
+                    $('<label>')
+                        .addClass('form-check-label flex-grow-1')
+                        .text(option),
+                    isUserAnswer && $('<i>')
+                        .addClass(`fas fa-${isCorrectAnswer ? 'check text-success' : 'times text-danger'} ms-2`)
+                )
+            );
+            
+            container.append(optionDiv);
+        });
+
+        // Add explanation immediately after the options
+        if (answer.explanation) {
+            container.append(
+                $('<div>')
+                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
+                    .append(
+                        $('<h6>').addClass('mb-2').text('Explanation:'),
+                        $('<p>').addClass('mb-0').text(answer.explanation)
+                    )
+            );
+        }
+
+        // Add references if available
+        if (answer.references && answer.references.length > 0) {
+            const refsContainer = $('<div>')
+                .addClass('references-section mt-3')
+                .append($('<h6>').addClass('mb-2').text('Learn More:'));
+
+            const refsList = $('<ul>').addClass('list-unstyled mb-0');
+            answer.references.forEach(ref => {
+                if (this.isValidUrl(ref.url)) {
+                    refsList.append(
+                        $('<li>').append(
+                            $('<a>')
+                                .attr({
+                                    href: ref.url,
+                                    target: '_blank',
+                                    rel: 'noopener noreferrer'
+                                })
+                                .addClass('text-decoration-none')
+                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
+                        )
+                    );
+                }
+            });
+            
+            refsContainer.append(refsList);
+            container.append(refsContainer);
+        }
+    },
+
+    displayFillBlankResult: function(answer, container) {
+        const userAnswer = answer.userAnswer || 'No answer provided';
+        const correctAnswer = answer.correctAnswer;
+        
+        container.append(
+            $('<div>').addClass('answer-display p-2 rounded mb-2').append(
+                $('<div>').addClass('mb-2').html(
+                    `<strong>Your answer:</strong> <span class="${answer.isCorrect ? 'text-success' : 'text-danger'}">${userAnswer}</span>`
+                ),
+                $('<div>').html(`<strong>Correct answer:</strong> <span class="text-success">${correctAnswer}</span>`)
+            )
+        );
+    },
+
+    displayDragDropResult: function(answer, container) {
+        const userAnswers = Array.isArray(answer.userAnswer) ? answer.userAnswer : [answer.userAnswer];
+        const correctAnswers = Array.isArray(answer.correctAnswer) ? answer.correctAnswer : [answer.correctAnswer];
+        
+        container.append(
+            $('<div>').addClass('answer-display p-2 rounded mb-2').append(
+                $('<div>').addClass('mb-2').html('<strong>Your order:</strong>'),
+                $('<div>').addClass('mb-3').text(userAnswers.join(' → ')),
+                $('<div>').addClass('mb-2').html('<strong>Correct order:</strong>'),
+                $('<div>').addClass('text-success').text(correctAnswers.join(' → '))
+            )
+        );
+    },
+
+    displayCodingResult: function(answer, container) {
+        // Similar to drag_drop but with code formatting
+        const userAnswers = Array.isArray(answer.userAnswer) ? answer.userAnswer : [answer.userAnswer];
+        const correctAnswers = Array.isArray(answer.correctAnswer) ? answer.correctAnswer : [answer.correctAnswer];
+        
+        container.append(
+            $('<div>').addClass('answer-display p-2 rounded mb-2').append(
+                $('<div>').addClass('mb-2').html('<strong>Your code:</strong>'),
+                $('<pre>').addClass('mb-3').text(userAnswers.join('\n')),
+                $('<div>').addClass('mb-2').html('<strong>Correct code:</strong>'),
+                $('<pre>').addClass('text-success').text(correctAnswers.join('\n'))
+            )
+        );
+    },
+
+    // Display quiz results
+    displayResults: function(answers) {
+        this.stopTimer();
+        const questionsContainer = $('#questions');
+        questionsContainer.empty();
+        
+        // Add score summary at the top
+        const correctCount = answers.filter(a => a.isCorrect).length;
+        const score = Math.round((correctCount / answers.length) * 100);
+        questionsContainer.prepend(
+            $('<div>')
+                .addClass('alert alert-info mb-4')
+                .html(`
+                    <h4 class="alert-heading">Quiz Results</h4>
+                    <p class="mb-0">
+                        <span class="h2">${score}%</span><br>
+                        <span class="text-muted">${correctCount} out of ${answers.length} correct</span>
+                    </p>
+                `)
+        );
+
+        // Display each question with results
+        answers.forEach((answer, index) => {
+            const questionDiv = $('<div>').addClass('card mb-3');
+            const questionBody = $('<div>').addClass('card-body');
+            
+            // Question header with badge
+            const badge = $('<span>')
+                .addClass(`badge ${answer.isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
+                .text(answer.isCorrect ? 'Correct' : 'Incorrect');
+            
+            questionBody.append(
+                $('<div>')
+                    .addClass('d-flex justify-content-between align-items-center mb-3')
+                    .append(
+                        $('<h5>').addClass('card-title mb-0').text(`Question ${index + 1}`),
+                        badge
+                    )
+            );
+
+            // Question text
+            questionBody.append($('<p>').addClass('card-text mb-3').text(answer.questionText));
+
+            // Display answer options based on question type
+            this.displayResultAnswers(answer, questionBody);
+
+            // Add explanation in a collapsible section
+            if (answer.explanation || (answer.references && answer.references.length)) {
+                const explanationId = `explanation-${index}`;
+                questionBody.append(
+                    $('<div>').addClass('mt-3').append(
+                        $('<button>')
+                            .addClass('btn btn-outline-secondary btn-sm w-100')
+                            .attr({
+                                'type': 'button',
+                                'data-bs-toggle': 'collapse',
+                                'data-bs-target': `#${explanationId}`,
+                                'aria-expanded': 'false'
+                            })
+                            .text('Show Explanation'),
+                        $('<div>')
+                            .addClass('collapse mt-3')
+                            .attr('id', explanationId)
+                            .append(this.createExplanationBlock(answer))
+                    )
+                );
+            }
+
+            questionDiv.append(questionBody);
+            questionsContainer.append(questionDiv);
+        });
+
+        // Add restart button
+        questionsContainer.append(
+            $('<button>')
+                .addClass('btn btn-primary mt-3')
+                .text('Start New Quiz')
+                .on('click', () => {
+                    $('#quizForm').trigger('reset');
+                    $('#quizContainer').addClass('d-none');
+                })
+        );
+    },
+
+    displayResultAnswers: function(answer, container) {
+        const answerBlock = $('<div>').addClass('answer-options');
+        
+        switch (answer.type) {
+            case 'multiple_choice':
+            case 'true_false':
+                this.displayMCResult(answer, answerBlock);
+                break;
+            case 'fill_blank':
+                this.displayFillBlankResult(answer, answerBlock);
+                break;
+            case 'drag_drop':
+                this.displayDragDropResult(answer, answerBlock);
+                break;
+            case 'coding':
+                this.displayCodingResult(answer, answerBlock);
+                break;
+        }
+        
+        container.append(answerBlock);
+    },
+
+    displayMCResult: function(answer, container) {
+        const options = answer.type === 'true_false' ? ['True', 'False'] : answer.options;
+        
+        options.forEach(option => {
+            const isUserAnswer = String(answer.userAnswer).toLowerCase() === String(option).toLowerCase();
+            const isCorrectAnswer = String(answer.correctAnswer).toLowerCase() === String(option).toLowerCase();
+            
+            const optionDiv = $('<div>')
+                .addClass('form-check mb-2 p-2 rounded')
+                .toggleClass('bg-success bg-opacity-10', isCorrectAnswer)
+                .toggleClass('border border-2', isUserAnswer)
+                .toggleClass('border-success', isUserAnswer && isCorrectAnswer)
+                .toggleClass('border-danger', isUserAnswer && !isCorrectAnswer);
+            
+            optionDiv.append(
+                $('<div>').addClass('d-flex align-items-center').append(
+                    $('<input>')
+                        .addClass('form-check-input me-2')
+                        .attr({
+                            type: 'radio',
+                            disabled: true,
+                            checked: isUserAnswer
+                        }),
+                    $('<label>')
+                        .addClass('form-check-label flex-grow-1')
+                        .text(option),
+                    isUserAnswer && $('<i>')
+                        .addClass(`fas fa-${isCorrectAnswer ? 'check text-success' : 'times text-danger'} ms-2`)
+                )
+            );
+            
+            container.append(optionDiv);
+        });
+
+        // Add explanation immediately after the options
+        if (answer.explanation) {
+            container.append(
+                $('<div>')
+                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
+                    .append(
+                        $('<h6>').addClass('mb-2').text('Explanation:'),
+                        $('<p>').addClass('mb-0').text(answer.explanation)
+                    )
+            );
+        }
+
+        // Add references if available
+        if (answer.references && answer.references.length > 0) {
+            const refsContainer = $('<div>')
+                .addClass('references-section mt-3')
+                .append($('<h6>').addClass('mb-2').text('Learn More:'));
+
+            const refsList = $('<ul>').addClass('list-unstyled mb-0');
+            answer.references.forEach(ref => {
+                if (this.isValidUrl(ref.url)) {
+                    refsList.append(
+                        $('<li>').append(
+                            $('<a>')
+                                .attr({
+                                    href: ref.url,
+                                    target: '_blank',
+                                    rel: 'noopener noreferrer'
+                                })
+                                .addClass('text-decoration-none')
+                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
+                        )
+                    );
+                }
+            });
+            
+            refsContainer.append(refsList);
+            container.append(refsContainer);
+        }
     },
 
     createAnswerHeader: function(index, badge) {
