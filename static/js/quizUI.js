@@ -368,36 +368,204 @@ const QuizUI = {
     // Display quiz results
     displayResults: function(answers) {
         this.stopTimer();
-        $('#quizContainer').addClass('d-none');
-        const resultsContent = $('#resultsContent');
-        resultsContent.empty();
+        const questionsContainer = $('#questions');
+        questionsContainer.empty();
         
-        let correctCount = 0;
-        answers.forEach((answer, index) => {
-            const resultDiv = $('<div>').addClass('mb-4');
-            const isCorrect = answer.isCorrect;
-            
-            if (isCorrect) correctCount++;
-            
-            const badge = $('<span>')
-                .addClass(`badge ${isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
-                .text(isCorrect ? 'Correct' : 'Incorrect');
-            
-            const answerBlock = $('<div>')
-                .addClass(`alert ${isCorrect ? 'alert-success' : 'alert-danger'}`);
+        // Add score summary at the top
+        const correctCount = answers.filter(a => a.isCorrect).length;
+        const score = Math.round((correctCount / answers.length) * 100);
+        questionsContainer.prepend(
+            $('<div>')
+                .addClass('alert alert-info mb-4')
+                .html(`
+                    <h4 class="alert-heading">Quiz Results</h4>
+                    <p class="mb-0">
+                        <span class="h2">${score}%</span><br>
+                        <span class="text-muted">${correctCount} out of ${answers.length} correct</span>
+                    </p>
+                `)
+        );
 
-            answerBlock.append(
-                this.createAnswerHeader(index, badge),
-                this.createAnswerDetails(answer),
-                this.createExplanationBlock(answer)
-            );
+        // Display each question with results
+        answers.forEach((answer, index) => {
+            const questionDiv = $('<div>').addClass('card mb-3');
+            const questionBody = $('<div>').addClass('card-body');
             
-            resultDiv.append(answerBlock);
-            resultsContent.append(resultDiv);
+            // Question header with badge
+            const badge = $('<span>')
+                .addClass(`badge ${answer.isCorrect ? 'bg-success' : 'bg-danger'} ms-2`)
+                .text(answer.isCorrect ? 'Correct' : 'Incorrect');
+            
+            questionBody.append(
+                $('<div>')
+                    .addClass('d-flex justify-content-between align-items-center mb-3')
+                    .append(
+                        $('<h5>').addClass('card-title mb-0').text(`Question ${index + 1}`),
+                        badge
+                    )
+            );
+
+            // Question text
+            questionBody.append($('<p>').addClass('card-text mb-3').text(answer.questionText));
+
+            // Display answer options based on question type
+            this.displayResultAnswers(answer, questionBody);
+
+            questionDiv.append(questionBody);
+            questionsContainer.append(questionDiv);
         });
 
-        this.displayScoreSummary(correctCount, answers.length);
-        this.showResultsModal();
+        // Add restart button
+        questionsContainer.append(
+            $('<button>')
+                .addClass('btn btn-primary mt-3')
+                .text('Start New Quiz')
+                .on('click', () => {
+                    $('#quizForm').trigger('reset');
+                    $('#quizContainer').addClass('d-none');
+                })
+        );
+    },
+
+    displayResultAnswers: function(answer, container) {
+        const answersSection = $('<div>').addClass('answers-section mb-4');
+        
+        // Display based on question type
+        switch (answer.type) {
+            case 'multiple_choice':
+            case 'true_false':
+                this.displayMCResult(answer, answersSection);
+                break;
+            case 'fill_blank':
+                this.displayFillBlankResult(answer, answersSection);
+                break;
+            case 'drag_drop':
+                this.displayDragDropResult(answer, answersSection);
+                break;
+            case 'coding':
+                this.displayCodingResult(answer, answersSection);
+                break;
+        }
+        
+        // Add explanation immediately after answers
+        if (answer.explanation) {
+            answersSection.append(
+                $('<div>')
+                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
+                    .append(
+                        $('<h6>').addClass('mb-2').text('Explanation:'),
+                        $('<p>').addClass('mb-0').text(answer.explanation)
+                    )
+            );
+        }
+
+        // Add references if available
+        if (answer.references && answer.references.length > 0) {
+            const refsContainer = $('<div>')
+                .addClass('references-section mt-3')
+                .append($('<h6>').addClass('mb-2').text('Learn More:'));
+
+            const refsList = $('<ul>').addClass('list-unstyled mb-0');
+            answer.references.forEach(ref => {
+                if (this.isValidUrl(ref.url)) {
+                    refsList.append(
+                        $('<li>').append(
+                            $('<a>')
+                                .attr({
+                                    href: ref.url,
+                                    target: '_blank',
+                                    rel: 'noopener noreferrer'
+                                })
+                                .addClass('text-decoration-none')
+                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
+                        )
+                    );
+                }
+            });
+            
+            refsContainer.append(refsList);
+            container.append(refsContainer);
+        }
+        
+        container.append(answersSection);
+    },
+
+    displayMCResult: function(answer, container) {
+        const options = answer.type === 'true_false' ? ['True', 'False'] : answer.options;
+        
+        options.forEach(option => {
+            const isUserAnswer = String(answer.userAnswer).toLowerCase() === String(option).toLowerCase();
+            const isCorrectAnswer = String(answer.correctAnswer).toLowerCase() === String(option).toLowerCase();
+            
+            const optionDiv = $('<div>')
+                .addClass('form-check mb-2 p-2 rounded')
+                .toggleClass('bg-success bg-opacity-10', isCorrectAnswer)
+                .toggleClass('border border-2', isUserAnswer)
+                .toggleClass('border-success', isUserAnswer && isCorrectAnswer)
+                .toggleClass('border-danger', isUserAnswer && !isCorrectAnswer);
+            
+            optionDiv.append(
+                $('<div>').addClass('d-flex align-items-center').append(
+                    $('<input>')
+                        .addClass('form-check-input me-2')
+                        .attr({
+                            type: 'radio',
+                            disabled: true,
+                            checked: isUserAnswer
+                        }),
+                    $('<label>')
+                        .addClass('form-check-label flex-grow-1')
+                        .text(option),
+                    isUserAnswer && $('<i>')
+                        .addClass(`fas fa-${isCorrectAnswer ? 'check text-success' : 'times text-danger'} ms-2`)
+                )
+            );
+            
+            container.append(optionDiv);
+        });
+    },
+
+    displayFillBlankResult: function(answer, container) {
+        const userAnswer = answer.userAnswer || 'No answer provided';
+        const correctAnswer = answer.correctAnswer;
+        
+        container.append(
+            $('<div>').addClass('answer-display p-2 rounded mb-2').append(
+                $('<div>').addClass('mb-2').html(
+                    `<strong>Your answer:</strong> <span class="${answer.isCorrect ? 'text-success' : 'text-danger'}">${userAnswer}</span>`
+                ),
+                $('<div>').html(`<strong>Correct answer:</strong> <span class="text-success">${correctAnswer}</span>`)
+            )
+        );
+    },
+
+    displayDragDropResult: function(answer, container) {
+        const userAnswers = Array.isArray(answer.userAnswer) ? answer.userAnswer : [answer.userAnswer];
+        const correctAnswers = Array.isArray(answer.correctAnswer) ? answer.correctAnswer : [answer.correctAnswer];
+        
+        container.append(
+            $('<div>').addClass('answer-display p-2 rounded mb-2').append(
+                $('<div>').addClass('mb-2').html('<strong>Your order:</strong>'),
+                $('<div>').addClass('mb-3').text(userAnswers.join(' → ')),
+                $('<div>').addClass('mb-2').html('<strong>Correct order:</strong>'),
+                $('<div>').addClass('text-success').text(correctAnswers.join(' → '))
+            )
+        );
+    },
+
+    displayCodingResult: function(answer, container) {
+        // Similar to drag_drop but with code formatting
+        const userAnswers = Array.isArray(answer.userAnswer) ? answer.userAnswer : [answer.userAnswer];
+        const correctAnswers = Array.isArray(answer.correctAnswer) ? answer.correctAnswer : [answer.correctAnswer];
+        
+        container.append(
+            $('<div>').addClass('answer-display p-2 rounded mb-2').append(
+                $('<div>').addClass('mb-2').html('<strong>Your code:</strong>'),
+                $('<pre>').addClass('mb-3').text(userAnswers.join('\n')),
+                $('<div>').addClass('mb-2').html('<strong>Correct code:</strong>'),
+                $('<pre>').addClass('text-success').text(correctAnswers.join('\n'))
+            )
+        );
     },
 
     createAnswerHeader: function(index, badge) {
@@ -423,51 +591,6 @@ const QuizUI = {
         );
     },
 
-    createExplanationBlock: function(answer) {
-        if (!answer.explanation && (!answer.references || !answer.references.length)) {
-            return '';
-        }
-
-        const explanationBlock = $('<div>').addClass('explanation-block mt-3');
-
-        if (answer.explanation) {
-            explanationBlock.append(
-                $('<div>').addClass('explanation-title').text('Explanation:'),
-                $('<div>').addClass('explanation-text').text(answer.explanation)
-            );
-        }
-
-        if (answer.references && answer.references.length > 0) {
-            const referencesList = $('<div>').addClass('mt-2');
-            referencesList.append($('<div>').addClass('explanation-title').text('Learn more:'));
-            
-            const linksList = $('<ul>').addClass('references-list');
-            answer.references.forEach(ref => {
-                if (this.isValidUrl(ref.url)) {
-                    const sourceName = this.getSourceName(ref.url);
-                    linksList.append(
-                        $('<li>').append(
-                            $('<a>')
-                                .attr({
-                                    href: ref.url,
-                                    target: '_blank',
-                                    rel: 'noopener noreferrer'
-                                })
-                                .html(`${ref.title || 'Reference'} <small>(${sourceName})</small>`)
-                        )
-                    );
-                }
-            });
-            
-            if (linksList.children().length > 0) {
-                referencesList.append(linksList);
-                explanationBlock.append(referencesList);
-            }
-        }
-
-        return explanationBlock;
-    },
-
     isValidUrl: function(url) {
         try {
             new URL(url);
@@ -484,38 +607,6 @@ const QuizUI = {
         } catch {
             return 'source';
         }
-    },
-
-    displayScoreSummary: function(correctCount, total) {
-        const score = Math.round((correctCount / total) * 100);
-        $('#resultsContent').prepend(
-            $('<div>')
-                .addClass('alert alert-info mb-4')
-                .html(`
-                    <strong>Your Score: ${score}%</strong> 
-                    (${correctCount} out of ${total} correct)
-                `)
-        );
-    },
-
-    showResultsModal: function() {
-        const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'), {
-            keyboard: true,
-            backdrop: true
-        });
-        
-        // Set up event listener for the close button
-        document.getElementById('closeResultsModal').addEventListener('click', () => {
-            resultsModal.hide();
-        });
-
-        // Clean up when modal is hidden
-        document.getElementById('resultsModal').addEventListener('hidden.bs.modal', () => {
-            document.getElementById('quizForm').reset();
-            $('#quizContainer').addClass('d-none');
-        });
-
-        resultsModal.show();
     },
 
     initializeTimer: function() {
