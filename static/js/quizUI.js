@@ -523,46 +523,6 @@ const QuizUI = {
             
             container.append(optionDiv);
         });
-
-        // Add explanation immediately after the options
-        if (answer.explanation) {
-            container.append(
-                $('<div>')
-                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
-                    .append(
-                        $('<h6>').addClass('mb-2').text('Explanation:'),
-                        $('<p>').addClass('mb-0').text(answer.explanation)
-                    )
-            );
-        }
-
-        // Add references if available
-        if (answer.references && answer.references.length > 0) {
-            const refsContainer = $('<div>')
-                .addClass('references-section mt-3')
-                .append($('<h6>').addClass('mb-2').text('Learn More:'));
-
-            const refsList = $('<ul>').addClass('list-unstyled mb-0');
-            answer.references.forEach(ref => {
-                if (this.isValidUrl(ref.url)) {
-                    refsList.append(
-                        $('<li>').append(
-                            $('<a>')
-                                .attr({
-                                    href: ref.url,
-                                    target: '_blank',
-                                    rel: 'noopener noreferrer'
-                                })
-                                .addClass('text-decoration-none')
-                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
-                        )
-                    );
-                }
-            });
-            
-            refsContainer.append(refsList);
-            container.append(refsContainer);
-        }
     },
 
     displayFillBlankResult: function(answer, container) {
