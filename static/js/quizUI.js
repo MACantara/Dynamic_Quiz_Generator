@@ -499,7 +499,22 @@ const QuizUI = {
     },
 
     showResultsModal: function() {
-        const resultsModal = new bootstrap.Modal('#resultsModal');
+        const resultsModal = new bootstrap.Modal(document.getElementById('resultsModal'), {
+            keyboard: true,
+            backdrop: true
+        });
+        
+        // Set up event listener for the close button
+        document.getElementById('closeResultsModal').addEventListener('click', () => {
+            resultsModal.hide();
+        });
+
+        // Clean up when modal is hidden
+        document.getElementById('resultsModal').addEventListener('hidden.bs.modal', () => {
+            document.getElementById('quizForm').reset();
+            $('#quizContainer').addClass('d-none');
+        });
+
         resultsModal.show();
     },
 
