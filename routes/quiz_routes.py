@@ -36,11 +36,8 @@ def generate():
         if time.time() - start_time > timeout:
             raise GatewayTimeout("Quiz generation timed out")
 
-        # Generate explanations for the quiz
-        explained_quiz = ai_service.generate_quiz_explanations(quiz, topic)
-        
         return jsonify({
-            'quiz': explained_quiz,
+            'quiz': quiz,
             'status': 'success'
         })
 

@@ -1,10 +1,13 @@
 import json
 from services.ai_service import AIService
+from werkzeug.exceptions import GatewayTimeout
+import time
 
 class QuizService:
     def __init__(self):
         self.ai_service = AIService()
         self.MAX_QUESTIONS = 20
+        self.TIMEOUT = 40  # 240 second timeout
 
     def _create_prompt(self, topic, num_questions, question_types):
         return f"""Generate a quiz about {topic} containing exactly {num_questions} questions.
@@ -144,5 +147,5 @@ class QuizService:
             return quiz_data['questions']
         except Exception as e:
             print(f"Error parsing quiz response: {e}")
-            print(f"Raw response: {response if 'response' in locals() else 'No response generated'}")
-            return []  # Return empty list on error
+            print(f"Raw response: {response.text if 'response' in locals() else 'No response generated'}")
+            return '{"questions": []}'  # Return empty quiz on error
