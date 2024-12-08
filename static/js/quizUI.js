@@ -368,9 +368,8 @@ const QuizUI = {
     // Display quiz results
     displayResults: function(answers) {
         this.stopTimer();
-        $('#quizContainer').addClass('d-none');
-        const resultsContent = $('#resultsContent');
-        resultsContent.empty();
+        const questionsContainer = $('#questions');
+        questionsContainer.empty();
         
         let correctCount = 0;
         answers.forEach((answer, index) => {
@@ -393,11 +392,30 @@ const QuizUI = {
             );
             
             resultDiv.append(answerBlock);
-            resultsContent.append(resultDiv);
+            questionsContainer.append(resultDiv);
         });
 
-        this.displayScoreSummary(correctCount, answers.length);
-        this.showResultsModal();
+        // Add score summary at the top
+        const score = Math.round((correctCount / answers.length) * 100);
+        questionsContainer.prepend(
+            $('<div>')
+                .addClass('alert alert-info mb-4')
+                .html(`
+                    <strong>Your Score: ${score}%</strong> 
+                    (${correctCount} out of ${answers.length} correct)
+                `)
+        );
+
+        // Add a restart button
+        questionsContainer.append(
+            $('<button>')
+                .addClass('btn btn-primary')
+                .text('Start New Quiz')
+                .on('click', () => {
+                    $('#quizForm').trigger('reset');
+                    $('#quizContainer').addClass('d-none');
+                })
+        );
     },
 
     createAnswerHeader: function(index, badge) {
