@@ -13,11 +13,6 @@ class QuizService:
         return f"""Generate a quiz about {topic} containing exactly {num_questions} questions.
         Use only the following question types: {', '.join(question_types)}. Ensure that the number of questions matches the specified number ({num_questions}) without exception.
         
-        For each question, include:
-        - A detailed explanation of the correct answer
-        - At least one reference link to documentation or reliable sources
-        - Clear reasoning for why other options are incorrect (for multiple choice questions)
-        
         Strictly follow these rules:
         - Challenge users with critical thinking, reading comprehension, and problem-solving.
         - Balance the difficulty of questions to progressively challenge learners while being fair.
@@ -54,9 +49,7 @@ class QuizService:
                 "Calculate interest", 
                 "Return the correct value"
             ],
-            "correct_answer": ["rate / 100", "amount - principal", "interest"],
-            "explanation": "The formula for compound interest is A = P(1 + r/n)^(nt). Here, rate / 100 converts the rate to a decimal, amount - principal gives the interest, and interest is returned.",
-            "references": ["https://www.investopedia.com/terms/c/compoundinterest.asp"]
+            "correct_answer": ["rate / 100", "amount - principal", "interest"]
         }}
 
         2. For drag and drop questions:
@@ -72,9 +65,7 @@ class QuizService:
             "question": "Match the following data structures with their common use cases:", 
             "options": ["Array", "Stack", "Queue", "Hash Map"], 
             "descriptions": ["Static data storage", "Last-In-First-Out operations", "First-In-First-Out operations", "Key-value pair storage"], 
-            "correct_answer": ["Array", "Stack", "Queue", "Hash Map"],
-            "explanation": "Arrays are used for static data storage, Stacks for LIFO operations, Queues for FIFO operations, and Hash Maps for key-value pair storage.",
-            "references": ["https://en.wikipedia.org/wiki/Data_structure"]
+            "correct_answer": ["Array", "Stack", "Queue", "Hash Map"]
         }}
         Example for ordering:
         {{
@@ -82,9 +73,7 @@ class QuizService:
             "question": "Arrange the following steps of the software development lifecycle in the correct order:", 
             "options": ["Testing", "Implementation", "Design", "Requirements Analysis"], 
             "descriptions": ["Step 1", "Step 2", "Step 3", "Step 4"], 
-            "correct_answer": ["Requirements Analysis", "Design", "Implementation", "Testing"],
-            "explanation": "The correct order of the software development lifecycle is Requirements Analysis, Design, Implementation, and Testing.",
-            "references": ["https://www.tutorialspoint.com/sdlc/sdlc_overview.htm"]
+            "correct_answer": ["Requirements Analysis", "Design", "Implementation", "Testing"]
         }}
 
         3. For fill-in-the-blank questions:
@@ -97,9 +86,7 @@ class QuizService:
         {{"type": "fill_blank", 
         "question": "The _____ protocol is used to securely transfer files between a client and server.",
         "options": ["SFTP", "HTTP", "SMTP", "ICMP"],
-        "correct_answer": "SFTP",
-        "explanation": "SFTP (Secure File Transfer Protocol) is used for secure file transfers, unlike HTTP, SMTP, and ICMP which serve different purposes.",
-        "references": ["https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol"]
+        "correct_answer": "SFTP"
         }}
 
         Ensure the total number of questions equals {num_questions}, and return a valid JSON object with the following structure:
@@ -109,9 +96,7 @@ class QuizService:
                 "question": "question_text",
                 "options": ["option1", "option2"],
                 "descriptions": ["desc1", "desc2"],
-                "correct_answer": "answer",
-                "explanation": "detailed explanation",
-                "references": ["link1", "link2"]
+                "correct_answer": "answer"
             }}
         ]}}
         """
@@ -126,19 +111,40 @@ class QuizService:
         if text.endswith('```'):
             text = text[:-3]
         return text.strip()
+    
     def generate_quiz(self, topic, num_questions, question_types):
         try:
             # Ensure num_questions is within limits
-            num_questions = min(max(num_questions, 1), self.MAX_QUESTIONS)
+            num_questions = min(max(int(num_questions), 1), self.MAX_QUESTIONS)
             prompt = self._create_prompt(topic, num_questions, question_types)
             
             # Pass topic for context-aware generation
             response = self.ai_service.generate_content(prompt, topic=topic)
-            cleaned_text = self._clean_response(response.text)
             
-            # Parse the JSON to validate it
+            # Handle different response types
+            if hasattr(response, 'text'):
+                cleaned_text = self._clean_response(response.text)
+            elif isinstance(response, str):
+                cleaned_text = self._clean_response(response)
+            else:
+                cleaned_text = self._clean_response(str(response))
+            
+            # Parse and validate the JSON
             quiz_data = json.loads(cleaned_text)
-            return cleaned_text
+            
+            # Ensure we have a questions array
+            if not isinstance(quiz_data, dict) or 'questions' not in quiz_data:
+                if isinstance(quiz_data, list):
+                    quiz_data = {'questions': quiz_data}
+                else:
+                    raise ValueError("Invalid quiz data format")
+            
+            # Validate number of questions
+            if len(quiz_data['questions']) != num_questions:
+                raise ValueError(f"Generated quiz has {len(quiz_data['questions'])} questions, expected {num_questions}")
+            
+            # Return the cleaned and validated quiz data
+            return quiz_data['questions']
         except Exception as e:
             print(f"Error parsing quiz response: {e}")
             print(f"Raw response: {response.text if 'response' in locals() else 'No response generated'}")

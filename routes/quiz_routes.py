@@ -2,9 +2,11 @@ from flask import Blueprint, render_template, request, jsonify, current_app
 from werkzeug.exceptions import GatewayTimeout
 import time
 from services.quiz_service import QuizService
+from services.ai_service import AIService
 
 quiz_bp = Blueprint('quiz', __name__)
 quiz_service = QuizService()
+ai_service = AIService()
 
 @quiz_bp.route('/')
 def index():

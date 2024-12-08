@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+    PRIMARY_GEMINI_API_KEY = os.getenv('PRIMARY_GEMINI_API_KEY')
+    SECONDARY_GEMINI_API_KEY = os.getenv('SECONDARY_GEMINI_API_KEY')
     DEBUG = True
     HOST = '0.0.0.0'
     PORT = 5000

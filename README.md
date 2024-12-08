@@ -38,9 +38,9 @@ source venv/Scripts/activate  # On Windows
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file in the root directory and add your Gemini API key:
+4. Create a `.env` file in the root directory and add your Gemini API keyS:
 ```
-GEMINI_API_KEY=your_api_key_here
+PRIMARY_GEMINI_API_KEY=your_api_key_here
 ```
 
 ## Usage
