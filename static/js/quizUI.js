@@ -409,7 +409,7 @@ const QuizUI = {
         // Add a restart button
         questionsContainer.append(
             $('<button>')
-                .addClass('btn btn-primary')
+                .addClass('btn btn-primary mt-3')
                 .text('Start New Quiz')
                 .on('click', () => {
                     $('#quizForm').trigger('reset');
@@ -502,23 +502,6 @@ const QuizUI = {
         } catch {
             return 'source';
         }
-    },
-
-    displayScoreSummary: function(correctCount, total) {
-        const score = Math.round((correctCount / total) * 100);
-        $('#resultsContent').prepend(
-            $('<div>')
-                .addClass('alert alert-info mb-4')
-                .html(`
-                    <strong>Your Score: ${score}%</strong> 
-                    (${correctCount} out of ${total} correct)
-                `)
-        );
-    },
-
-    showResultsModal: function() {
-        const resultsModal = new bootstrap.Modal('#resultsModal');
-        resultsModal.show();
     },
 
     initializeTimer: function() {
