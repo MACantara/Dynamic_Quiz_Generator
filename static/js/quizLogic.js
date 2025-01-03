@@ -73,7 +73,7 @@ const QuizLogic = {
             return;
         }
 
-        // Calculate results
+        // Calculate results with enhanced explanation handling
         const resultsDetails = answers.map((answer, index) => {
             const question = quizData.questions[index];
             const isCorrect = this.compareAnswers(answer.userAnswer, question.correct_answer);
@@ -83,15 +83,15 @@ const QuizLogic = {
                 userAnswer: answer.userAnswer,
                 correctAnswer: question.correct_answer,
                 isCorrect: isCorrect,
-                explanation: question.explanation || "No explanation available.",
-                references: question.references || [],
+                explanation: question.explanation.text || "No explanation available.",
+                references: question.explanation.references || [],
+                searchResults: question.searchResults || "",
                 type: question.type,
-                options: question.options || [], // Include options for MC questions
-                descriptions: question.descriptions || [] // Include descriptions for drag-drop
+                options: question.options || [],
+                descriptions: question.descriptions || []
             };
         });
 
-        // Display results using QuizUI
         QuizUI.displayResults(resultsDetails);
     },
 
@@ -120,24 +120,35 @@ const QuizLogic = {
     },
 
     getUserAnswer: function(question, index) {
+        let userAnswer;
+        
         switch (question.type) {
             case 'multiple_choice':
-            case 'fill_blank':
             case 'true_false':
-                return $(`[name="q${index}"]:checked`).val() || 
-                       $(`select[name="q${index}"]`).val();
+                userAnswer = $(`[name="q${index}"]:checked`).val();
+                break;
+                
+            case 'fill_blank':
+                userAnswer = $(`select[name="q${index}"]`).val();
+                break;
 
             case 'drag_drop':
-                return question.descriptions ? 
+                userAnswer = question.descriptions ? 
                     this.getMatchingAnswers(index) : 
                     this.getOrderingAnswers(index);
+                break;
 
             case 'coding':
-                return this.getCodingAnswers(index);
-
-            default:
-                return null;
+                userAnswer = this.getCodingAnswers(index);
+                break;
         }
+
+        // Add metadata about the answer
+        return {
+            value: userAnswer,
+            timestamp: new Date().toISOString(),
+            questionType: question.type
+        };
     },
 
     getMatchingAnswers: function(index) {

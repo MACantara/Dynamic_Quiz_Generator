@@ -102,6 +102,35 @@ class AIService:
             logger.error(f"Error parsing response: {str(e)}", exc_info=True)
             return ""
 
+    def parse_response_parts(self, response):
+        """Parse different parts of the response and format them appropriately."""
+        logger.debug("Starting to parse response parts")
+        result = []
+        
+        try:
+            candidate = response.candidates[0]
+            logger.debug("Processing main content parts")
+            
+            # Process content parts
+            for part in candidate.content.parts:
+                if part.text:
+                    logger.debug("Adding text part")
+                    result.append(part.text)
+                elif hasattr(part, 'executable_code'):
+                    logger.debug("Adding code block")
+                    result.append(f'```python\n{part.executable_code.code}\n```')
+            
+            # Process grounding metadata
+            if hasattr(candidate, 'grounding_metadata') and candidate.grounding_metadata:
+                result.extend(self.process_grounding_metadata(candidate.grounding_metadata))
+                
+        except Exception as e:
+            logger.error(f"Error parsing response parts: {str(e)}", exc_info=True)
+            raise
+        
+        logger.debug("Finished parsing response parts")
+        return "\n".join(result)
+
     def generate_explanation(self, question, correct_answer, topic):
         """Generate a detailed explanation using Gemini's built-in search"""
         try:
@@ -118,10 +147,15 @@ Requirements:
 - Focus on why the answer is correct
 - Explain core concepts clearly"""
             
-            explanation_text = self.generate_content(explanation_prompt)
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=explanation_prompt,
+                config=GenerateContentConfig(**self.base_config)
+            )
             
-            # Parse explanation text and metadata
-            parts = explanation_text.split("\n--- ")
+            # Use parse_response_parts to get formatted explanation with sources
+            full_response = self.parse_response_parts(response)
+            parts = full_response.split("\n--- ")
             main_explanation = parts[0].strip()
             
             # Extract references from metadata sections

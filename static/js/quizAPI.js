@@ -79,17 +79,32 @@ const QuizAPI = {
 
             // Process metadata and references for each question
             quizData.questions = quizData.questions.map(question => {
-                // Extract references from metadata if present
-                if (question.metadata && question.metadata.sources) {
-                    question.references = question.metadata.sources.map(source => ({
-                        title: source.title || 'Reference',
-                        url: source.url
-                    }));
+                // Extract references and explanations from response metadata
+                if (question.metadata && question.metadata.grounding_chunks) {
+                    question.references = question.metadata.grounding_chunks
+                        .filter(chunk => chunk.web && chunk.web.uri)
+                        .map(chunk => ({
+                            title: chunk.web.title || 'Web Source',
+                            url: chunk.web.uri
+                        }));
                 }
                 
-                // Ensure explanation exists
+                // Extract search results if available
+                if (question.metadata && question.metadata.search_entry_point) {
+                    question.searchResults = question.metadata.search_entry_point.rendered_content;
+                }
+                
+                // Ensure explanation exists and is properly formatted
                 if (!question.explanation) {
-                    question.explanation = "No explanation available.";
+                    question.explanation = {
+                        text: "No explanation available.",
+                        references: []
+                    };
+                } else if (typeof question.explanation === 'string') {
+                    question.explanation = {
+                        text: question.explanation,
+                        references: question.references || []
+                    };
                 }
                 
                 return question;
