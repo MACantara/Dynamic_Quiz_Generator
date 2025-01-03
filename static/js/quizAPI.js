@@ -103,7 +103,13 @@ const QuizAPI = {
                 } else if (typeof question.explanation === 'string') {
                     question.explanation = {
                         text: question.explanation,
-                        references: question.references || []
+                        references: []
+                    };
+                } else if (typeof question.explanation === 'object') {
+                    // Ensure the explanation object has the correct structure
+                    question.explanation = {
+                        text: question.explanation.text || question.explanation.explanation || "No explanation available.",
+                        references: question.explanation.references || []
                     };
                 }
                 
