@@ -112,7 +112,8 @@ const QuizLogic = {
                 isCorrect: this.compareAnswers(userAnswer, question.correct_answer),
                 type: question.type,
                 explanation: question.explanation,
-                references: question.references
+                references: question.references || [],
+                metadata: question.metadata || {}
             });
         });
         return answers;

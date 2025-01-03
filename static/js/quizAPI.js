@@ -76,6 +76,25 @@ const QuizAPI = {
             });
 
             quizData.questions = uniqueQuestions;
+
+            // Process metadata and references for each question
+            quizData.questions = quizData.questions.map(question => {
+                // Extract references from metadata if present
+                if (question.metadata && question.metadata.sources) {
+                    question.references = question.metadata.sources.map(source => ({
+                        title: source.title || 'Reference',
+                        url: source.url
+                    }));
+                }
+                
+                // Ensure explanation exists
+                if (!question.explanation) {
+                    question.explanation = "No explanation available.";
+                }
+                
+                return question;
+            });
+
             return quizData;
         } catch (error) {
             console.error('Error parsing quiz data:', error);

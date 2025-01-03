@@ -427,6 +427,37 @@ const QuizUI = {
         );
     },
 
+    displayReferenceSection: function(references, container) {
+        if (!references || references.length === 0) return;
+        
+        const refsSection = $('<div>').addClass('mt-3 p-3 bg-light rounded');
+        const refsList = $('<div>').addClass('reference-list');
+        
+        references.forEach(ref => {
+            if (ref.url && ref.title) {
+                refsList.append(
+                    $('<div>').addClass('reference-item mb-2').append(
+                        $('<a>')
+                            .attr({
+                                href: ref.url,
+                                target: '_blank',
+                                rel: 'noopener noreferrer'
+                            })
+                            .addClass('text-decoration-none')
+                            .html(`<i class="fas fa-external-link-alt me-2"></i>${ref.title}`)
+                    )
+                );
+            }
+        });
+        
+        if (refsList.children().length > 0) {
+            refsSection
+                .append($('<h6>').addClass('mb-3').text('Sources:'))
+                .append(refsList);
+            container.append(refsSection);
+        }
+    },
+
     displayResultAnswers: function(answer, container) {
         const answersSection = $('<div>').addClass('answers-section mb-4');
         
@@ -449,44 +480,21 @@ const QuizUI = {
         
         // Add explanation immediately after answers
         if (answer.explanation) {
-            answersSection.append(
-                $('<div>')
-                    .addClass('explanation-section mt-3 p-3 bg-light border rounded')
-                    .append(
-                        $('<h6>').addClass('mb-2').text('Explanation:'),
-                        $('<p>').addClass('mb-0').text(answer.explanation)
-                    )
-            );
-        }
-
-        // Add references if available
-        if (answer.references && answer.references.length > 0) {
-            const refsContainer = $('<div>')
-                .addClass('references-section mt-3')
-                .append($('<h6>').addClass('mb-2').text('Learn More:'));
-
-            const refsList = $('<ul>').addClass('list-unstyled mb-0');
-            answer.references.forEach(ref => {
-                if (this.isValidUrl(ref.url)) {
-                    refsList.append(
-                        $('<li>').append(
-                            $('<a>')
-                                .attr({
-                                    href: ref.url,
-                                    target: '_blank',
-                                    rel: 'noopener noreferrer'
-                                })
-                                .addClass('text-decoration-none')
-                                .html(`<i class="fas fa-external-link-alt me-1"></i>${ref.title || 'Reference'}`)
-                        )
-                    );
-                }
-            });
+            const explanationSection = $('<div>')
+                .addClass('explanation-section mt-3 p-3 bg-light border rounded')
+                .append(
+                    $('<h6>').addClass('mb-2').text('Explanation:'),
+                    $('<p>').addClass('mb-2').text(answer.explanation)
+                );
             
-            refsContainer.append(refsList);
-            container.append(refsContainer);
+            // Add references if available
+            if (answer.references && answer.references.length > 0) {
+                this.displayReferenceSection(answer.references, explanationSection);
+            }
+            
+            answersSection.append(explanationSection);
         }
-        
+
         container.append(answersSection);
     },
 
