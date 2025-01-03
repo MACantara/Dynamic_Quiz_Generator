@@ -119,65 +119,54 @@ const QuizLogic = {
     },
 
     getUserAnswer: function(question, index) {
-        let userAnswer;
+        let rawAnswer;
         
         switch (question.type) {
             case 'multiple_choice':
             case 'true_false':
-                userAnswer = $(`[name="q${index}"]:checked`).val();
+                rawAnswer = $(`[name="q${index}"]:checked`).val();
                 break;
                 
             case 'fill_blank':
-                userAnswer = $(`select[name="q${index}"]`).val();
+                rawAnswer = $(`select[name="q${index}"]`).val();
                 break;
 
             case 'drag_drop':
-                userAnswer = question.descriptions ? 
-                    this.getMatchingAnswers(index) : 
-                    this.getOrderingAnswers(index);
+                if (question.descriptions) {
+                    // For matching type questions
+                    rawAnswer = [];
+                    $(`.drop-zone-item[data-question="${index}"]`).each(function() {
+                        const dragItem = $(this).find('.drag-item');
+                        rawAnswer.push(dragItem.length ? dragItem.attr('data-value') : null);
+                    });
+                } else {
+                    // For ordering type questions
+                    rawAnswer = [];
+                    $(`.ordering-zone[data-question="${index}"] .drag-item`).each(function() {
+                        rawAnswer.push($(this).attr('data-value'));
+                    });
+                }
                 break;
 
             case 'coding':
-                userAnswer = this.getCodingAnswers(index);
+                rawAnswer = [];
+                $(`.coding-drop-zone[data-question="${index}"]`).each(function() {
+                    const dragItem = $(this).find('.drag-item');
+                    rawAnswer.push(dragItem.length ? dragItem.attr('data-value') : null);
+                });
                 break;
+
+            default:
+                rawAnswer = null;
         }
 
-        // Add metadata about the answer
-        return {
-            value: userAnswer,
-            timestamp: new Date().toISOString(),
-            questionType: question.type
-        };
+        return rawAnswer;
     },
 
-    getMatchingAnswers: function(index) {
-        const answers = [];
-        $(`.drop-zone-item[data-question="${index}"]`).each(function() {
-            const dragItem = $(this).find('.drag-item');
-            answers.push(dragItem.length ? dragItem.attr('data-value') : null);
-        });
-        return answers;
-    },
-
-    getOrderingAnswers: function(index) {
-        const answers = [];
-        $(`.ordering-zone[data-question="${index}"] .drag-item`).each(function() {
-            answers.push($(this).attr('data-value'));
-        });
-        return answers;
-    },
-
-    getCodingAnswers: function(index) {
-        const answers = [];
-        $(`.coding-drop-zone[data-question="${index}"]`).each(function() {
-            const dragItem = $(this).find('.drag-item');
-            answers.push(dragItem.length ? dragItem.attr('data-value') : null);
-        });
-        return answers;
-    },
-
-    // Compare user answers with correct answers
     compareAnswers: function(userAnswer, correctAnswer) {
+        // Handle null or undefined answers
+        if (!userAnswer) return false;
+        
         console.log('Comparing Answers:', {
             userAnswer: userAnswer, 
             correctAnswer: correctAnswer
@@ -185,16 +174,17 @@ const QuizLogic = {
 
         // Handle true/false questions
         if (typeof correctAnswer === 'string' && 
-            (correctAnswer.toLowerCase() === 'true' || correctAnswer.toLowerCase() === 'false')) {
-            const normalizedUser = String(userAnswer).toLowerCase() === 'true';
-            const normalizedCorrect = String(correctAnswer).toLowerCase() === 'true';
-            return normalizedUser === normalizedCorrect;
+            ['true', 'false'].includes(correctAnswer.toLowerCase())) {
+            return String(userAnswer).toLowerCase() === correctAnswer.toLowerCase();
         }
 
         // Handle arrays (for drag_drop and coding questions)
-        if (Array.isArray(userAnswer) && Array.isArray(correctAnswer)) {
+        if (Array.isArray(correctAnswer)) {
+            if (!Array.isArray(userAnswer)) return false;
             if (userAnswer.length !== correctAnswer.length) return false;
-            return userAnswer.every((val, idx) => val === correctAnswer[idx]);
+            return userAnswer.every((val, idx) => {
+                return String(val || '').toLowerCase() === String(correctAnswer[idx]).toLowerCase();
+            });
         }
 
         // Handle other question types
