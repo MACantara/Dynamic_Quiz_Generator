@@ -1,147 +1,152 @@
 import json
-import google.generativeai as genai
+from google import genai
+from google.genai.types import Tool, GenerateContentConfig, GoogleSearch
 from config import Config
-from services.search_service import SearchService
+import logging
+
+logger = logging.getLogger(__name__)
 
 class AIService:
     def __init__(self):
-        # Configure primary API key for main AI capabilities
-        genai.configure(api_key=Config.PRIMARY_GEMINI_API_KEY)
-        self.primary_model = genai.GenerativeModel('gemini-1.5-flash')
+        logger.info("Initializing AIService")
+        self.client = genai.Client(api_key=Config.PRIMARY_GEMINI_API_KEY)
+        self.search_tool = Tool(google_search=GoogleSearch())
         
-        # Configure secondary API key for explanation generation
-        genai.configure(api_key=Config.SECONDARY_GEMINI_API_KEY)
-        self.explanation_model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        self.search_service = SearchService()
+        self.base_config = {
+            "temperature": 0.6,
+            "top_p": 0.95,
+            "top_k": 40,
+            "max_output_tokens": 8192,
+            "tools": [self.search_tool],
+            "response_modalities": ["TEXT"]
+        }
+        logger.debug("AIService initialized with gemini-2.0-flash-exp")
 
-    def generate_content(self, prompt, topic=None, model_type='primary'):
-        """
-        Generate content using either primary or explanation model
+    def process_grounding_metadata(self, metadata):
+        """Process grounding metadata and return formatted results."""
+        result = []
         
-        Args:
-            prompt (str): The prompt to generate content for
-            topic (str, optional): The topic to generate content for
-            model_type (str): 'primary' or 'explanation'
+        # Process search results
+        if metadata.search_entry_point and metadata.search_entry_point.rendered_content:
+            logger.debug("Adding search results")
+            result.extend([
+                "\n--- Search Results ---",
+                metadata.search_entry_point.rendered_content
+            ])
         
-        Returns:
-            Generated content as a string
-        """
+        # Process sources
+        if metadata.grounding_chunks:
+            logger.debug(f"Processing {len(metadata.grounding_chunks)} grounding chunks")
+            result.append("\n--- Sources ---")
+            for chunk in metadata.grounding_chunks:
+                if chunk.web and chunk.web.uri:
+                    title = chunk.web.title or "Web Source"
+                    result.append(f"- [{title}]({chunk.web.uri})")
+                elif chunk.retrieved_context and chunk.retrieved_context.uri:
+                    title = chunk.retrieved_context.title or "Retrieved Context"
+                    result.append(f"- [{title}]({chunk.retrieved_context.uri})")
+        
+        return result
+
+    def generate_content(self, prompt, topic=None):
+        """Generate content using Gemini API with built-in search"""
         try:
-            # Select the appropriate model
-            model = self.primary_model if model_type == 'primary' else self.explanation_model
+            enhanced_prompt = f"""
+            Topic: {topic if topic else 'General'}
             
-            # Configure safety settings to minimize blocking
-            safety_settings = [
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_NONE"
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_NONE"
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_NONE"
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_NONE"
-                }
-            ]
+            {prompt}
             
-            # Enhance prompt with topic context if provided
-            if topic:
-                search_data = self.search_service.get_relevant_content(topic)
-                enhanced_prompt = f"""
-                Context from research:
-                {search_data.get('context', '')}
-                
-                {prompt}
-                """
-            else:
-                enhanced_prompt = prompt
-            
-            # Generate content
-            response = model.generate_content(
-                enhanced_prompt, 
-                safety_settings=safety_settings
+            Note: Please use search to find accurate and up-to-date information.
+            """
+
+            logger.debug("Generating content with Gemini API")
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=enhanced_prompt,
+                config=GenerateContentConfig(
+                    **self.base_config
+                )
             )
             
-            # Handle different possible response types
-            if hasattr(response, 'text'):
-                return response.text
-            elif isinstance(response, str):
-                return response
-            else:
-                # Try to extract text from the response
-                try:
-                    return str(response)
-                except Exception as e:
-                    print(f"Error extracting response text: {e}")
-                    return ""
-        
+            return self._parse_response(response)
+            
         except Exception as e:
-            print(f"Error generating content: {e}")
+            logger.error(f"Error generating content: {str(e)}", exc_info=True)
+            return ""
+
+    def _parse_response(self, response):
+        """Parse response from Gemini API"""
+        try:
+            content = ""
+            metadata_results = []
+
+            # Extract text content
+            if hasattr(response, 'text'):
+                content = response.text
+            elif isinstance(response, str):
+                content = response
+            else:
+                content = str(response)
+
+            # Process metadata if available
+            if hasattr(response, 'metadata'):
+                logger.debug("Processing response metadata")
+                metadata_results = self.process_grounding_metadata(response.metadata)
+
+            # Combine content with metadata results
+            if metadata_results:
+                content = f"{content}\n{''.join(metadata_results)}"
+
+            return content
+        except Exception as e:
+            logger.error(f"Error parsing response: {str(e)}", exc_info=True)
             return ""
 
     def generate_explanation(self, question, correct_answer, topic):
-        """
-        Generate a detailed explanation for a specific question
-        
-        Args:
-            question (str): The text of the question
-            correct_answer (str): The correct answer to the question
-            topic (str): The broader topic of the quiz
-        
-        Returns:
-            A dictionary containing the explanation and references
-        """
+        """Generate a detailed explanation using Gemini's built-in search"""
         try:
-            # Fetch relevant content from search service
-            search_results = self.search_service.get_relevant_content(topic)
-            
-            # Construct prompt for explanation generation
-            explanation_prompt = f"""Generate a concise, clear explanation for the following question:
+            explanation_prompt = f"""Based on accurate information from web search, generate a clear, evidence-based explanation for this question:
 
 Question: {question}
 Correct Answer: {correct_answer}
+Topic: {topic}
 
-Guidelines:
-- Provide a precise explanation in 3-5 sentences
+Requirements:
+- Search for and cite reliable sources
+- Provide a clear, concise explanation (3-4 sentences)
+- Reference specific sources when possible
 - Focus on why the answer is correct
-- Use clear, direct language
-- Explain the key concept succinctly
-- Avoid unnecessary details
-
-Context from research:
-{search_results.get('context', '')}
-
-Additional context:
-- Topic: {topic}
-- Explain the core concept behind the correct answer"""
+- Explain core concepts clearly"""
             
-            # Generate the explanation
-            explanation_text = self.generate_content(explanation_prompt, model_type='explanation')
+            explanation_text = self.generate_content(explanation_prompt)
             
-            # Prepare references
-            references = search_results.get('references', [])
+            # Parse explanation text and metadata
+            parts = explanation_text.split("\n--- ")
+            main_explanation = parts[0].strip()
             
-            # Fallback if no explanation generated
-            if not explanation_text:
-                explanation_text = f"The correct answer is '{correct_answer}'. This answer is significant because it highlights a key concept in {topic}."
+            # Extract references from metadata sections
+            references = []
+            for part in parts[1:]:
+                if part.startswith("Sources ---"):
+                    for line in part.split("\n"):
+                        if line.startswith("- ["):
+                            try:
+                                title = line[3:line.index("]")]
+                                url = line[line.index("(")+1:line.index(")")]
+                                references.append({"title": title, "url": url})
+                            except ValueError:
+                                continue
             
             # Ensure explanation is concise
-            explanation_text = ' '.join(explanation_text.split()[:100])
+            main_explanation = ' '.join(main_explanation.split()[:100])
             
             return {
-                'explanation': explanation_text,
+                'explanation': main_explanation or f"The correct answer relates to key concepts in {topic}.",
                 'references': references
             }
-        
+            
         except Exception as e:
-            print(f"Error generating explanation: {e}")
+            logger.error(f"Error generating explanation: {str(e)}", exc_info=True)
             return {
                 'explanation': f"The correct answer relates to key concepts in {topic}.",
                 'references': []
@@ -177,7 +182,7 @@ Additional context:
                 explained_quiz.append(question_with_explanation)
             
             except Exception as e:
-                print(f"Error processing question explanation: {e}")
+                logger.error(f"Error processing question explanation: {e}", exc_info=True)
                 # Add a fallback explanation if generation fails
                 fallback_question = question.copy()
                 fallback_question['explanation'] = "Unable to generate explanation."
