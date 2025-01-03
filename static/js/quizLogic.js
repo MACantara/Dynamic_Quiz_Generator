@@ -83,9 +83,8 @@ const QuizLogic = {
                 userAnswer: answer.userAnswer,
                 correctAnswer: question.correct_answer,
                 isCorrect: isCorrect,
-                explanation: question.explanation.text || "No explanation available.",
-                references: question.explanation.references || [],
-                searchResults: question.searchResults || "",
+                explanation: question.explanation?.text || "No explanation available.",
+                references: question.explanation?.references || [],
                 type: question.type,
                 options: question.options || [],
                 descriptions: question.descriptions || []
